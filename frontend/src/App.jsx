@@ -1,29 +1,27 @@
-import React, { useEffect } from 'react';
-import { Routes, Route } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { getCurrentUser } from './store/slices/authSlice';
-import { fetchMenuItems, fetchSpecials } from './store/slices/menuSlice';
-import MainLayout from './components/layout/MainLayout';
-import Home from './pages/Home/Home';
-import MenuPage from './pages/Menu/MenuPage';
-import AboutPage from './pages/About/AboutPage';
-import ContactPage from './pages/Contact/ContactPage';
-import ReservationsPage from './pages/Reservations/ReservationsPage';
-import OrdersPage from './pages/Orders/OrdersPage';
-import ProfilePage from './pages/Profile/ProfilePage';
-import LoginPage from './pages/Login/LoginPage';
-import RegisterPage from './pages/Register/RegisterPage';
-import CheckoutPage from './pages/Checkout/CheckoutPage';
-import ScrollToTop from './components/common/ScrollToTop';
+import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { Route, Routes } from "react-router-dom";
+import ScrollToTop from "./components/common/ScrollToTop";
+import MainLayout from "./components/layout/MainLayout";
+import AboutPage from "./pages/About/AboutPage";
+import AdminDashboard from "./pages/Admin/AdminDashboard";
+import CheckoutPage from "./pages/Checkout/CheckoutPage";
+import ContactPage from "./pages/Contact/ContactPage";
+import Home from "./pages/Home/Home";
+import LoginPage from "./pages/Login/LoginPage";
+import MenuPage from "./pages/Menu/MenuPage";
+import OrdersPage from "./pages/Orders/OrdersPage";
+import ProfilePage from "./pages/Profile/ProfilePage";
+import RegisterPage from "./pages/Register/RegisterPage";
+import ReservationsPage from "./pages/Reservations/ReservationsPage";
+import { getCurrentUser } from "./store/slices/authSlice";
+import { fetchMenuItems, fetchSpecials } from "./store/slices/menuSlice";
 
 function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      dispatch(getCurrentUser());
-    }
+    dispatch(getCurrentUser());
     dispatch(fetchMenuItems());
     dispatch(fetchSpecials());
   }, [dispatch]);
@@ -43,6 +41,7 @@ function App() {
         </Route>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/register" element={<RegisterPage />} />
+        <Route path="/admin/*" element={<AdminDashboard />} />
       </Routes>
     </ScrollToTop>
   );

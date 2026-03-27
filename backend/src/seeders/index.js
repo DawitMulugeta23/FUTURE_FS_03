@@ -18,14 +18,21 @@ const seedData = async () => {
     await Menu.deleteMany();
 
     console.log("🌱 Seeding admin user...");
-    const hashedPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD, 10);
+
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash("d23cs33e", salt);
+
     const admin = await User.create({
-      name: process.env.ADMIN_NAME,
-      email: process.env.ADMIN_EMAIL,
-      password: process.env.ADMIN_PASSWORD,
+      name: "Dawit Mulugeta",
+      email: "dawitmulugetas23@gmail.com",
+      password: "d23cs33e", // Will be hashed by pre-save hook
       role: "admin",
+      phone: "+251 987 654 321",
+      isActive: true,
     });
     console.log(`✅ Admin created: ${admin.email}`);
+    console.log(`   Password: d23cs33e`);
 
     console.log("🌱 Seeding categories...");
     const categories = await Category.insertMany([
@@ -114,15 +121,6 @@ const seedData = async () => {
         isVegan: true,
         preparationTime: 10,
       },
-      {
-        name: "Iced Caramel Macchiato",
-        category: categories[0]._id,
-        price: 70,
-        description: "Vanilla, caramel, espresso, and milk over ice",
-        isVegetarian: true,
-        isSpecial: true,
-        preparationTime: 8,
-      },
     ];
 
     await Menu.insertMany(menuItems);
@@ -130,10 +128,8 @@ const seedData = async () => {
 
     console.log("\n🎉 Database seeded successfully!");
     console.log("\n📋 Login Credentials:");
-    console.log(`   Admin Email: ${process.env.ADMIN_EMAIL}`);
-    console.log(`   Admin Password: ${process.env.ADMIN_PASSWORD}`);
-    console.log("\n🍽️  Categories created:");
-    categories.forEach((cat) => console.log(`   - ${cat.name}`));
+    console.log(`   Admin Email: dawitmulugetas23@gmail.com`);
+    console.log(`   Admin Password: d23cs33e`);
 
     process.exit(0);
   } catch (error) {
