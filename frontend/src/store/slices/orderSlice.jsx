@@ -93,14 +93,33 @@ const orderSlice = createSlice({
         state.isLoading = false;
         state.error = action.payload;
       })
+      .addCase(getOrderById.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(getOrderById.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.currentOrder = action.payload.data;
       })
+      .addCase(getOrderById.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+      })
+      .addCase(cancelOrder.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(cancelOrder.fulfilled, (state, action) => {
-        const index = state.orders.findIndex(o => o._id === action.payload.data._id);
+        state.isLoading = false;
+        const index = state.orders.findIndex((o) => o._id === action.payload.data._id);
         if (index !== -1) {
           state.orders[index] = action.payload.data;
         }
+      })
+      .addCase(cancelOrder.rejected, (state, action) => {
+        state.isLoading = false;
+        state.error = action.payload;
+        toast.error(action.payload || 'Failed to cancel order');
       });
   },
 });
