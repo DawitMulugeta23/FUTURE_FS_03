@@ -1,8 +1,12 @@
 const rateLimit = require("express-rate-limit");
 
+const isProduction = process.env.NODE_ENV === "production";
+
 const limiter = rateLimit({
-  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 15 * 60 * 1000,
-  max: parseInt(process.env.RATE_LIMIT_MAX_REQUESTS) || 100,
+  windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS, 10) || 15 * 60 * 1000,
+  max: isProduction
+    ? parseInt(process.env.RATE_LIMIT_MAX_REQUESTS, 10) || 100
+    : parseInt(process.env.RATE_LIMIT_DEV_MAX, 10) || 10_000,
   message: {
     success: false,
     message: "Too many requests from this IP, please try again later.",
@@ -13,7 +17,7 @@ const limiter = rateLimit({
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 5,
+  max: isProduction ? 5 : 100,
   skipSuccessfulRequests: true,
   message: {
     success: false,

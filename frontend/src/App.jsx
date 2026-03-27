@@ -20,7 +20,10 @@ function App() {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    dispatch(getCurrentUser());
+    const token = localStorage.getItem('token');
+    if (token) {
+      dispatch(getCurrentUser());
+    }
     dispatch(fetchMenuItems());
     dispatch(fetchSpecials());
   }, [dispatch]);
