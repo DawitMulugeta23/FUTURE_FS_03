@@ -5,8 +5,8 @@ import { Route, Routes, useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import DashboardStats from "../../components/admin/DashboardStats";
 import MenuManager from "../../components/admin/MenuManager";
+import AdminUsers from "./AdminUsers";
 import apiClient from "../../services/api/apiClient";
-
 const AdminDashboard = () => {
   const { user, isAuthenticated } = useSelector((state) => state.auth);
   const navigate = useNavigate();
@@ -51,6 +51,9 @@ const AdminDashboard = () => {
             index
             element={<DashboardStats stats={stats} isLoading={isLoading} />}
           />
+            <Route index element={<DashboardStats stats={stats} isLoading={isLoading} />} />
+            <Route path="menu" element={<MenuManager />} />
+            <Route path="users" element={<AdminUsers />} />
           <Route path="menu" element={<MenuManager />} />
           <Route
             path="orders"

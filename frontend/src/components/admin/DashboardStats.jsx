@@ -1,57 +1,55 @@
-import React from 'react';
-import { motion } from 'framer-motion';
-import { 
-  FiUsers, 
-  FiShoppingBag, 
-  FiDollarSign, 
-  FiCalendar,
-  FiTrendingUp,
-  FiStar
-} from 'react-icons/fi';
+import {
+    FiCalendar,
+    FiDollarSign,
+    FiShoppingBag,
+    FiStar,
+    FiTrendingUp,
+    FiUsers,
+} from "react-icons/fi";
 
 const DashboardStats = ({ stats, isLoading }) => {
   const statCards = [
     {
-      title: 'Total Users',
+      title: "Total Users",
       value: stats?.totalUsers || 0,
       icon: FiUsers,
-      color: 'bg-blue-500',
-      change: '+12%',
+      color: "bg-blue-500",
+      change: "+12%",
     },
     {
-      title: 'Total Orders',
+      title: "Total Orders",
       value: stats?.totalOrders || 0,
       icon: FiShoppingBag,
-      color: 'bg-green-500',
-      change: '+8%',
+      color: "bg-green-500",
+      change: "+8%",
     },
     {
-      title: 'Revenue',
-      value: `$${stats?.totalRevenue?.toFixed(2) || '0'}`,
+      title: "Revenue",
+      value: `$${stats?.totalRevenue?.toFixed(2) || "0"}`,
       icon: FiDollarSign,
-      color: 'bg-yellow-500',
-      change: '+15%',
+      color: "bg-yellow-500",
+      change: "+15%",
     },
     {
-      title: 'Menu Items',
+      title: "Menu Items",
       value: stats?.totalMenuItems || 0,
       icon: FiTrendingUp,
-      color: 'bg-purple-500',
-      change: '+3',
+      color: "bg-purple-500",
+      change: "+3",
     },
     {
-      title: 'Pending Reservations',
+      title: "Pending Reservations",
       value: stats?.pendingReservations || 0,
       icon: FiCalendar,
-      color: 'bg-orange-500',
-      change: 'Needs attention',
+      color: "bg-orange-500",
+      change: "Needs attention",
     },
     {
-      title: 'Pending Reviews',
+      title: "Pending Reviews",
       value: stats?.pendingReviews || 0,
       icon: FiStar,
-      color: 'bg-pink-500',
-      change: 'Approve',
+      color: "bg-pink-500",
+      change: "Approve",
     },
   ];
 
@@ -59,7 +57,10 @@ const DashboardStats = ({ stats, isLoading }) => {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-white rounded-xl shadow-lg p-6 animate-pulse">
+          <div
+            key={i}
+            className="bg-white rounded-xl shadow-lg p-6 animate-pulse"
+          >
             <div className="h-4 bg-gray-200 rounded w-1/2 mb-4"></div>
             <div className="h-8 bg-gray-200 rounded w-3/4"></div>
           </div>
