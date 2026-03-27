@@ -3,6 +3,7 @@ const User = require("../models/User.model");
 const AppError = require("../utils/AppError");
 const catchAsync = require("../utils/catchAsync");
 const { HTTP_STATUS } = require("../config/constants");
+const { admin } = require("./admin.middleware");
 
 const protect = catchAsync(async (req, res, next) => {
   let token;
@@ -42,4 +43,4 @@ const protect = catchAsync(async (req, res, next) => {
   }
 });
 
-module.exports = { protect };
+module.exports = { protect, admin };
