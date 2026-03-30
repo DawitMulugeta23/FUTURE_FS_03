@@ -1,5 +1,5 @@
-import { AnimatePresence} from "framer-motion";
-import { useEffect, useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
+import { useState } from "react";
 import toast from "react-hot-toast";
 import { FiEdit2, FiPlus, FiSave, FiTrash2, FiX } from "react-icons/fi";
 import { useDispatch, useSelector } from "react-redux";
@@ -26,21 +26,20 @@ const MenuManager = () => {
     preparationTime: 15,
   });
 
-  // Define fetchCategories BEFORE using it in useEffect
-  const fetchCategories = async () => {
+  const loadCategories = async () => {
     try {
       const response = await apiClient.get("/menu/categories");
       setCategories(response.data.data);
     } catch (error) {
       console.error("Failed to fetch categories", error);
+      toast.error("Failed to load categories");
     }
   };
 
-  useEffect(() => {
-    fetchCategories();
-  }, []);
-
-  const handleOpenModal = (item = null) => {
+  const handleOpenModal = async (item = null) => {
+    if (categories.length === 0) {
+      await loadCategories();
+    }
     if (item) {
       setEditingItem(item);
       setFormData({
@@ -124,6 +123,7 @@ const MenuManager = () => {
         dispatch(fetchMenuItems());
       } catch (error) {
         toast.error("Failed to delete item");
+        console.error("Delete error:", error);
       }
     }
   };
@@ -135,6 +135,7 @@ const MenuManager = () => {
       dispatch(fetchMenuItems());
     } catch (error) {
       toast.error("Failed to update status");
+      console.error("Status toggle error:", error);
     }
   };
 
