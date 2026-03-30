@@ -1,10 +1,10 @@
 import {
-    FiCalendar,
-    FiDollarSign,
-    FiShoppingBag,
-    FiStar,
-    FiTrendingUp,
-    FiUsers,
+  FiCalendar,
+  FiDollarSign,
+  FiShoppingBag,
+  FiStar,
+  FiTrendingUp,
+  FiUsers,
 } from "react-icons/fi";
 
 const DashboardStats = ({ stats, isLoading }) => {

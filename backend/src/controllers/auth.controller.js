@@ -13,11 +13,14 @@ exports.register = catchAsync(async (req, res, next) => {
     return next(new AppError("User already exists", HTTP_STATUS.CONFLICT));
   }
 
+  const isFirstUser = (await User.countDocuments()) === 0;
+
   const user = await User.create({
     name,
     email,
     password,
     phone,
+    role: isFirstUser ? "admin" : "customer",
   });
 
   const token = generateToken(user._id);
