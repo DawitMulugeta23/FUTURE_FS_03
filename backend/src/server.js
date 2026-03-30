@@ -4,7 +4,7 @@ const cors = require("cors");
 const helmet = require("helmet");
 const morgan = require("morgan");
 const compression = require("compression");
-
+const serviceRoutes = require("./routes/service.routes");
 dotenv.config();
 
 const connectDB = require("./config/database.config");
@@ -80,7 +80,7 @@ app.use("/api/orders", orderRoutes);
 app.use("/api/reservations", reservationRoutes);
 app.use("/api/reviews", reviewRoutes);
 app.use("/api/admin", adminRoutes);
-
+app.use("/api/services", serviceRoutes);
 // 404 handler
 app.use((req, res) => {
   res.status(404).json({

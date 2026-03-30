@@ -1,4 +1,4 @@
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { FiEdit2, FiPlus, FiSave, FiTrash2, FiX } from "react-icons/fi";

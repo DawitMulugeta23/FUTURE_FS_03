@@ -4,7 +4,22 @@ module.exports = {
     STAFF: "staff",
     ADMIN: "admin",
   },
-
+  SERVICE_CATEGORIES: {
+    FOOD: "food",
+    BEVERAGE: "beverage",
+    EVENT: "event",
+    CATERING: "catering",
+    SPECIAL: "special",
+    OTHER: "other",
+  },
+  SERVICE_CATEGORY_LABELS: {
+    food: "Food Service",
+    beverage: "Beverage Service",
+    event: "Event Service",
+    catering: "Catering Service",
+    special: "Special Service",
+    other: "Other Service",
+  },
   ORDER_STATUS: {
     PENDING: "pending",
     CONFIRMED: "confirmed",
