@@ -1,49 +1,39 @@
-import { useEffect } from "react";
-import { useDispatch } from "react-redux";
 import { Route, Routes } from "react-router-dom";
-import ScrollToTop from "./components/common/ScrollToTop";
-import MainLayout from "./components/layout/MainLayout";
-import AboutPage from "./pages/About/AboutPage";
-import AdminDashboard from "./pages/Admin/AdminDashboard";
-import CheckoutPage from "./pages/Checkout/CheckoutPage";
-import ContactPage from "./pages/Contact/ContactPage";
-import Home from "./pages/Home/Home";
-import LoginPage from "./pages/Login/LoginPage";
-import MenuPage from "./pages/Menu/MenuPage";
-import OrdersPage from "./pages/Orders/OrdersPage";
-import ProfilePage from "./pages/Profile/ProfilePage";
-import RegisterPage from "./pages/Register/RegisterPage";
-import ReservationsPage from "./pages/Reservations/ReservationsPage";
-import { getCurrentUser } from "./store/slices/authSlice";
-import { fetchMenuItems, fetchSpecials } from "./store/slices/menuSlice";
-
+import Navbar from "./components/Navbar";
+import ProtectedRoute from "./components/ProtectedRoute";
+import { CartProvider } from "./context/CartContext";
+import Cart from "./pages/Cart";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import Menu from "./pages/Menu";
+import Orders from "./pages/Orders";
+import Register from "./pages/Register";
+import AdminDashboard from "./pages/AdminDashboard";
+import {Toaster } from "react-hot-toast";
 function App() {
-  const dispatch = useDispatch();
-
-  useEffect(() => {
-    dispatch(getCurrentUser());
-    dispatch(fetchMenuItems());
-    dispatch(fetchSpecials());
-  }, [dispatch]);
-
   return (
-    <ScrollToTop>
+    <CartProvider>
+      <Toaster position="top-center" reverseOrder={false}/>
+      <Navbar />
       <Routes>
-        <Route path="/" element={<MainLayout />}>
-          <Route index element={<Home />} />
-          <Route path="menu" element={<MenuPage />} />
-          <Route path="about" element={<AboutPage />} />
-          <Route path="contact" element={<ContactPage />} />
-          <Route path="reservations" element={<ReservationsPage />} />
-          <Route path="orders" element={<OrdersPage />} />
-          <Route path="profile" element={<ProfilePage />} />
-          <Route path="checkout" element={<CheckoutPage />} />
-        </Route>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/admin/*" element={<AdminDashboard />} />
+        <Route path="/" element={<Home />} />
+        <Route path="/menu" element={<Menu />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+        <Route path="/myorders" element={<Orders />} />
+        <Route
+          path="/myorders"
+          element={
+            <ProtectedRoute>
+              <Orders />
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/admin" element={<ProtectedRoute isAdmin={true}>
+          <AdminDashboard/> </ProtectedRoute>} />
       </Routes>
-    </ScrollToTop>
+    </CartProvider>
   );
 }
 
