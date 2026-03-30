@@ -1,12 +1,12 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { Route, Routes, useNavigate } from "react-router-dom";
-import AdminSidebar from "../components/admin/AdminSidebar";
-import DashboardStats from "../components/admin/DashboardStats";
-import MenuManager from "../components/admin/MenuManager";
-import OrdersManager from "../components/admin/OrdersManager";
-import UsersManager from "../components/admin/UsersManager";
+import { Route, Routes } from "react-router-dom";
+import DashboardStats from "../components/Admin/DashboardStats";
+import MenuManager from "../components/Admin/MenuManager";
+import OrdersManager from "../components/Admin/OrdersManager";
+import UsersManager from "../components/Admin/UserManager";
 import AdminSetting from "../components/AdminSetting";
+import AdminSidebar from "../components/AdminSidebar";
 import EmailCampaign from "../components/EmailCampaign";
 import MapComponent from "../components/MapComponent";
 
@@ -18,7 +18,6 @@ const AdminDashboard = () => {
     totalMenuItems: 0,
   });
   const [loading, setLoading] = useState(true);
-  const navigate = useNavigate();
 
   useEffect(() => {
     fetchStats();
@@ -35,12 +34,12 @@ const AdminDashboard = () => {
         axios.get("http://localhost:5000/api/admin/users/count", { headers }),
       ]);
 
-      setStats({
+      setStats((prev) => ({
+        ...prev,
         totalOrders: ordersRes.data.stats.totalOrders,
         totalRevenue: ordersRes.data.stats.totalRevenue,
         totalUsers: usersRes.data.count,
-        totalMenuItems: stats.totalMenuItems,
-      });
+      }));
     } catch (err) {
       console.error("Error fetching stats", err);
     } finally {
@@ -86,13 +85,15 @@ const AdminDashboard = () => {
                       <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
                       <div className="space-y-2">
                         <button
-                          onClick={() => navigate("/admin/menu")}
+                          onClick={() => (window.location.href = "/admin/menu")}
                           className="w-full text-left px-4 py-2 bg-amber-50 rounded-lg hover:bg-amber-100 transition"
                         >
                           ➕ Add New Menu Item
                         </button>
                         <button
-                          onClick={() => navigate("/admin/orders")}
+                          onClick={() =>
+                            (window.location.href = "/admin/orders")
+                          }
                           className="w-full text-left px-4 py-2 bg-amber-50 rounded-lg hover:bg-amber-100 transition"
                         >
                           📦 View Recent Orders

@@ -2,7 +2,7 @@ import { Toaster } from "react-hot-toast";
 import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { CartProvider } from "./context/CartContext";
+import { CartProvider } from "./context/CartContext"; // Import from CartContext.jsx
 import About from "./pages/About";
 import AdminDashboard from "./pages/AdminDashboard";
 import Cart from "./pages/Cart";

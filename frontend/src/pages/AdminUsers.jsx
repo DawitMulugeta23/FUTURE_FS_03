@@ -44,6 +44,7 @@ const AdminUsers = () => {
       fetchUsers();
     } catch (err) {
       toast.error("Failed to update role");
+      console.error("Error updating user role", err);
     }
   };
 
@@ -58,6 +59,7 @@ const AdminUsers = () => {
         fetchUsers();
       } catch (err) {
         toast.error("Failed to delete user");
+        console.error("Error deleting user", err);
       }
     }
   };
@@ -80,6 +82,7 @@ const AdminUsers = () => {
       setEmailData({ subject: "", message: "" });
     } catch (err) {
       toast.error("Failed to send email");
+      console.error("Error sending email", err);
     }
   };
 

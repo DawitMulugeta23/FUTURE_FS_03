@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { CartContext } from "./CartContext"; // Import from the other file
+import { CartContext } from "./CartContext";
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
@@ -9,7 +9,7 @@ export const CartProvider = ({ children }) => {
       const exist = prev.find((x) => x._id === item._id);
       if (exist) {
         return prev.map((x) =>
-          x._id === item._id ? { ...exist, qty: exist.qty + 1 } : x
+          x._id === item._id ? { ...exist, qty: exist.qty + 1 } : x,
         );
       }
       return [...prev, { ...item, qty: 1 }];

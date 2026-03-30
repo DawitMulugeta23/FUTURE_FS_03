@@ -6,7 +6,6 @@ import toast from "react-hot-toast";
 const OrdersManager = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedOrder, setSelectedOrder] = useState(null);
 
   useEffect(() => {
     fetchOrders();
@@ -39,6 +38,7 @@ const OrdersManager = () => {
       fetchOrders();
     } catch (err) {
       toast.error("Failed to update order status");
+      console.error("Error updating order status", err);
     }
   };
 
