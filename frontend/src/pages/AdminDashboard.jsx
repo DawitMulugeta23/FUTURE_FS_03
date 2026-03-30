@@ -1,129 +1,146 @@
-import { useEffect, useState } from 'react';
-import axios from 'axios';
-import { Package, PlusCircle, CheckCircle, TrendingUp, AlertCircle, Loader2 } from 'lucide-react';
-import AddFoodForm from '../components/AddFoodForm';
+import axios from "axios";
+import { useEffect, useState } from "react";
+import { Route, Routes, useNavigate } from "react-router-dom";
+import AdminSidebar from "../components/admin/AdminSidebar";
+import DashboardStats from "../components/admin/DashboardStats";
+import MenuManager from "../components/admin/MenuManager";
+import OrdersManager from "../components/admin/OrdersManager";
+import UsersManager from "../components/admin/UsersManager";
+import AdminSetting from "../components/AdminSetting";
+import EmailCampaign from "../components/EmailCampaign";
+import MapComponent from "../components/MapComponent";
 
 const AdminDashboard = () => {
-  const [orders, setOrders] = useState([]);
-  const [activeTab, setActiveTab] = useState('orders');
-  const [stats, setStats] = useState({ totalRevenue: 0, totalOrders: 0, pendingOrders: 0 });
-  const [loading, setLoading] = useState(true); // Now we will use this!
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalRevenue: 0,
+    totalUsers: 0,
+    totalMenuItems: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        setLoading(true); // Start loading
-        const token = localStorage.getItem('token');
-        const headers = { Authorization: `Bearer ${token}` };
+    fetchStats();
+    fetchMenuCount();
+  }, []);
 
-        const [ordersRes, statsRes] = await Promise.all([
-          axios.get('http://localhost:5000/api/orders', { headers }),
-          axios.get('http://localhost:5000/api/orders/stats', { headers })
-        ]);
+  const fetchStats = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const headers = { Authorization: `Bearer ${token}` };
 
-        setOrders(ordersRes.data.data);
-        setStats(statsRes.data.stats);
-      } catch (err) {
-        console.error("Error fetching admin data", err);
-      } finally {
-        setLoading(false); // Stop loading
-      }
-    };
+      const [ordersRes, usersRes] = await Promise.all([
+        axios.get("http://localhost:5000/api/orders/stats", { headers }),
+        axios.get("http://localhost:5000/api/admin/users/count", { headers }),
+      ]);
 
-    fetchData();
-  }, [activeTab]);
+      setStats({
+        totalOrders: ordersRes.data.stats.totalOrders,
+        totalRevenue: ordersRes.data.stats.totalRevenue,
+        totalUsers: usersRes.data.count,
+        totalMenuItems: stats.totalMenuItems,
+      });
+    } catch (err) {
+      console.error("Error fetching stats", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchMenuCount = async () => {
+    try {
+      const { data } = await axios.get("http://localhost:5000/api/food");
+      setStats((prev) => ({ ...prev, totalMenuItems: data.data.length }));
+    } catch (err) {
+      console.error("Error fetching menu count", err);
+    }
+  };
 
   return (
     <div className="flex min-h-screen bg-gray-100">
-      {/* Sidebar */}
-      <div className="w-64 bg-amber-900 text-white p-6 fixed h-full">
-        <h2 className="text-2xl font-bold mb-8 italic">Yesekela Admin</h2>
-        <button 
-          onClick={() => setActiveTab('orders')} 
-          className={`w-full flex items-center gap-2 p-3 rounded-lg mb-2 transition ${activeTab === 'orders' ? 'bg-amber-700' : 'hover:bg-amber-800'}`}
-        >
-          <Package size={20} /> Orders
-        </button>
-        <button 
-          onClick={() => setActiveTab('add')} 
-          className={`w-full flex items-center gap-2 p-3 rounded-lg transition ${activeTab === 'add' ? 'bg-amber-700' : 'hover:bg-amber-800'}`}
-        >
-          <PlusCircle size={20} /> Add Menu Item
-        </button>
-      </div>
+      <AdminSidebar />
 
-      {/* Main Content Area */}
-      <div className="flex-1 ml-64 p-8">
-        
-        {/* STATS SECTION */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-green-500">
-            <div className="flex justify-between items-center mb-2">
-               <p className="text-gray-500 text-sm font-medium">Total Revenue</p>
-               <TrendingUp className="text-green-500" size={20} />
-            </div>
-            <h4 className="text-3xl font-bold text-gray-800">{loading ? '...' : `${stats.totalRevenue} ETB`}</h4>
-          </div>
+      <div className="flex-1 ml-64">
+        <div className="p-8">
+          <Routes>
+            <Route
+              path="/"
+              element={
+                <>
+                  <h1 className="text-3xl font-bold text-gray-800 mb-6">
+                    Dashboard
+                  </h1>
+                  <DashboardStats stats={stats} loading={loading} />
 
-          <div className="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-amber-500">
-            <div className="flex justify-between items-center mb-2">
-               <p className="text-gray-500 text-sm font-medium">Total Orders</p>
-               <Package className="text-amber-500" size={20} />
-            </div>
-            <h4 className="text-3xl font-bold text-gray-800">{loading ? '...' : stats.totalOrders}</h4>
-          </div>
-
-          <div className="bg-white p-6 rounded-2xl shadow-sm border-b-4 border-red-500">
-            <div className="flex justify-between items-center mb-2">
-               <p className="text-gray-500 text-sm font-medium">Pending Payments</p>
-               <AlertCircle className="text-red-500" size={20} />
-            </div>
-            <h4 className="text-3xl font-bold text-gray-800">{loading ? '...' : stats.pendingOrders}</h4>
-          </div>
+                  <div className="grid md:grid-cols-2 gap-6 mt-8">
+                    <div className="bg-white rounded-2xl shadow p-6">
+                      <h3 className="text-xl font-bold mb-4">
+                        Recent Activity
+                      </h3>
+                      <p className="text-gray-600">
+                        Welcome to Yesekela Café Admin Panel
+                      </p>
+                    </div>
+                    <div className="bg-white rounded-2xl shadow p-6">
+                      <h3 className="text-xl font-bold mb-4">Quick Actions</h3>
+                      <div className="space-y-2">
+                        <button
+                          onClick={() => navigate("/admin/menu")}
+                          className="w-full text-left px-4 py-2 bg-amber-50 rounded-lg hover:bg-amber-100 transition"
+                        >
+                          ➕ Add New Menu Item
+                        </button>
+                        <button
+                          onClick={() => navigate("/admin/orders")}
+                          className="w-full text-left px-4 py-2 bg-amber-50 rounded-lg hover:bg-amber-100 transition"
+                        >
+                          📦 View Recent Orders
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              }
+            />
+            <Route path="/menu" element={<MenuManager />} />
+            <Route path="/orders" element={<OrdersManager />} />
+            <Route path="/users" element={<UsersManager />} />
+            <Route path="/email" element={<EmailCampaign />} />
+            <Route
+              path="/location"
+              element={
+                <div className="bg-white rounded-2xl shadow p-6">
+                  <h3 className="text-2xl font-bold mb-6 text-gray-800">
+                    Our Location
+                  </h3>
+                  <MapComponent />
+                  <div className="mt-6 grid md:grid-cols-2 gap-4">
+                    <div className="bg-amber-50 p-4 rounded-xl">
+                      <h4 className="font-bold text-amber-900 mb-2">Address</h4>
+                      <p className="text-gray-700">
+                        Main Road, Near DBU Entrance
+                      </p>
+                      <p className="text-gray-700">Debre Berhan, Ethiopia</p>
+                    </div>
+                    <div className="bg-amber-50 p-4 rounded-xl">
+                      <h4 className="font-bold text-amber-900 mb-2">
+                        Opening Hours
+                      </h4>
+                      <p className="text-gray-700">
+                        Monday - Friday: 7:00 AM - 9:00 PM
+                      </p>
+                      <p className="text-gray-700">
+                        Saturday - Sunday: 8:00 AM - 8:00 PM
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              }
+            />
+            <Route path="/settings" element={<AdminSetting />} />
+          </Routes>
         </div>
-
-        {/* DYNAMIC CONTENT with Loading State */}
-        {activeTab === 'orders' ? (
-          <div className="bg-white rounded-2xl shadow p-6 min-h-[400px] flex flex-col">
-            <h3 className="text-2xl font-bold mb-6 text-gray-800">Recent Orders</h3>
-            
-            {loading ? (
-              <div className="flex-1 flex flex-col items-center justify-center text-amber-900">
-                <Loader2 className="animate-spin mb-2" size={40} />
-                <p className="font-medium">Fetching orders from DBU servers...</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left">
-                  <thead>
-                    <tr className="border-b text-gray-400">
-                      <th className="pb-4">Order ID</th>
-                      <th className="pb-4">Customer</th>
-                      <th className="pb-4">Total</th>
-                      <th className="pb-4">Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map(order => (
-                      <tr key={order._id} className="border-b hover:bg-gray-50 transition">
-                        <td className="py-4 font-mono text-sm">#{order._id.slice(-6)}</td>
-                        <td className="py-4 font-medium">{order.user?.name || 'Guest'}</td>
-                        <td className="py-4 font-bold text-amber-900">{order.totalPrice} ETB</td>
-                        <td className="py-4">
-                          <span className={`px-3 py-1 rounded-full text-xs font-bold ${order.isPaid ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
-                            {order.isPaid ? 'Paid' : 'Pending'}
-                          </span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </div>
-        ) : (
-          <AddFoodForm />
-        )}
       </div>
     </div>
   );
