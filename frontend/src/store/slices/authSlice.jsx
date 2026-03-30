@@ -2,11 +2,13 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import authApi from '../../services/api/authApi';
 import toast from 'react-hot-toast';
 
+const storedToken = localStorage.getItem('token');
+
 const initialState = {
   user: null,
-  token: localStorage.getItem('token'),
-  isLoading: false,
-  isAuthenticated: false,
+  token: storedToken,
+  isLoading: !!storedToken,
+  isAuthenticated: !!storedToken,
   error: null,
 };
 
@@ -97,13 +99,20 @@ const authSlice = createSlice({
         state.error = action.payload;
         toast.error(action.payload);
       })
+      .addCase(getCurrentUser.pending, (state) => {
+        state.isLoading = true;
+        state.error = null;
+      })
       .addCase(getCurrentUser.fulfilled, (state, action) => {
+        state.isLoading = false;
         state.user = action.payload.data;
         state.isAuthenticated = true;
       })
-      .addCase(getCurrentUser.rejected, (state) => {
+      .addCase(getCurrentUser.rejected, (state, action) => {
+        state.isLoading = false;
         state.user = null;
         state.isAuthenticated = false;
+        state.error = action.payload || null;
         localStorage.removeItem('token');
       });
   },

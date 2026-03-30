@@ -5,22 +5,16 @@ import { Route, Routes, useNavigate } from "react-router-dom";
 import AdminSidebar from "../../components/admin/AdminSidebar";
 import DashboardStats from "../../components/admin/DashboardStats";
 import MenuManager from "../../components/admin/MenuManager";
-import AdminUsers from "./AdminUsers";
 import apiClient from "../../services/api/apiClient";
+import AdminUsers from "./AdminUsers";
+
 const AdminDashboard = () => {
-  const { user, isAuthenticated } = useSelector((state) => state.auth);
+  const { user, isAuthenticated, isLoading: isAuthLoading } = useSelector(
+    (state) => state.auth,
+  );
   const navigate = useNavigate();
   const [stats, setStats] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  useEffect(() => {
-    if (!isAuthenticated || user?.role !== "admin") {
-      navigate("/");
-      toast.error("Access denied. Admin only.");
-      return;
-    }
-    fetchDashboardStats();
-  }, [isAuthenticated, user, navigate]);
 
   const fetchDashboardStats = async () => {
     try {
@@ -28,10 +22,35 @@ const AdminDashboard = () => {
       setStats(response.data.data);
     } catch (error) {
       console.error("Failed to fetch stats", error);
+      toast.error("Failed to load dashboard stats");
     } finally {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (isAuthLoading) return;
+
+    if (!isAuthenticated || user?.role !== "admin") {
+      navigate("/", { replace: true });
+      toast.error("Access denied. Admin only.");
+      return;
+    }
+
+    fetchDashboardStats();
+  }, [isAuthenticated, isAuthLoading, navigate, user?.role]);
+
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-coffee-50">
+        <div className="h-12 w-12 animate-spin rounded-full border-b-2 border-coffee-500"></div>
+      </div>
+    );
+  }
+
+  if (!isAuthenticated || user?.role !== "admin") {
+    return null;
+  }
 
   return (
     <div className="min-h-screen bg-coffee-50">
@@ -51,10 +70,8 @@ const AdminDashboard = () => {
             index
             element={<DashboardStats stats={stats} isLoading={isLoading} />}
           />
-            <Route index element={<DashboardStats stats={stats} isLoading={isLoading} />} />
-            <Route path="menu" element={<MenuManager />} />
-            <Route path="users" element={<AdminUsers />} />
           <Route path="menu" element={<MenuManager />} />
+          <Route path="users" element={<AdminUsers />} />
           <Route
             path="orders"
             element={
@@ -65,15 +82,6 @@ const AdminDashboard = () => {
                 <p className="text-gray-500">
                   Orders management coming soon...
                 </p>
-              </div>
-            }
-          />
-          <Route
-            path="users"
-            element={
-              <div className="bg-white rounded-xl shadow-lg p-6">
-                <h2 className="text-xl font-semibold mb-4">Users Management</h2>
-                <p className="text-gray-500">Users management coming soon...</p>
               </div>
             }
           />

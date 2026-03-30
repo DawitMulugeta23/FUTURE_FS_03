@@ -10,6 +10,7 @@ const {
 
 router.get("/", menuController.getAllMenuItems);
 router.get("/specials", menuController.getSpecials);
+router.get("/categories", menuController.getCategories);
 router.get("/category/:category", menuController.getMenuByCategory);
 router.get("/:id", menuController.getMenuItemById);
 

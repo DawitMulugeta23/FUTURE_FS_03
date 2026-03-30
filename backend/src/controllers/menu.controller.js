@@ -26,6 +26,16 @@ exports.getAllMenuItems = catchAsync(async (req, res, next) => {
   });
 });
 
+exports.getCategories = catchAsync(async (req, res, next) => {
+  const categories = await Category.find().sort({ name: 1 });
+
+  res.status(HTTP_STATUS.OK).json({
+    success: true,
+    count: categories.length,
+    data: categories,
+  });
+});
+
 exports.getMenuItemById = catchAsync(async (req, res, next) => {
   const menuItem = await Menu.findById(req.params.id).populate(
     "category",
