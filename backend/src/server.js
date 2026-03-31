@@ -9,8 +9,8 @@ dotenv.config({ path: path.resolve(__dirname, "../.env") });
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const foodRoutes = require("./routes/food.Routes");
-const orderRoutes = require("./routes/order.Routes");
-const adminRoutes = require("./routes/admin.Routes");
+const orderRoutes = require("./routes/orderRoutes");
+const adminRoutes = require("./routes/adminRoutes");
 const feedbackRoutes = require("./routes/feedback.routes");
 
 // Connect to Database
