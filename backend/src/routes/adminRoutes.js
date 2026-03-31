@@ -1,8 +1,6 @@
 const express = require("express");
 const router = express.Router();
 const { protect, authorize } = require("../middleware/authMiddleware");
-const User = require("../models/User");
-const sendEmail = require("../utils/sendEmail");
 const {
   getAllFeedback,
   replyToFeedback,
@@ -18,7 +16,6 @@ import {
   updateSetting,
   updateUser,
 } from "../controllers/admin.Controller";
-// Debug middleware
 router.use((req, res, next) => {
   console.log(`[Admin Routes] ${req.method} ${req.originalUrl}`);
   next();
@@ -32,16 +29,10 @@ router.get("/users", getUser);
 router.get("/users/count", countUser);
 router.put("/users/:id/role", updateUser);
 router.delete("/users/:id", deletUser);
-// Email campaign routes
 router.post("/email/campaign", SendEmail);
-
 router.post("/send-email", sendtoaUser);
-
-// Settings routes
 router.get("/settings", Setting);
-
 router.put("/settings", updateSetting);
-// Feedback management routes
 router.get("/feedback", getAllFeedback);
 router.post("/feedback/:id/reply", replyToFeedback);
 router.delete("/feedback/:id", deleteFeedback);

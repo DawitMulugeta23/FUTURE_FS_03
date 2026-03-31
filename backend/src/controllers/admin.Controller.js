@@ -1,11 +1,6 @@
 const { protect, authorize } = require("../middleware/authMiddleware");
 const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
-const {
-  getAllFeedback,
-  replyToFeedback,
-  deleteFeedback,
-} = require("../controllers/feedback.controller");
 
 export const getUser = async (req, res) => {
   try {
