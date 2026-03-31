@@ -1,15 +1,17 @@
 const express = require("express");
 const dotenv = require("dotenv");
+const path = require("path");
+const cors = require("cors");
+
+// Load env vars before importing routes/controllers
+dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const foodRoutes = require("./routes/food.Routes");
-const orderRoutes = require("./routes/orderRoutes");
-const adminRoutes = require("./routes/admin.routes");
-const feedbackRoutes = require("./routes/feedback.routes"); // Make sure this is added
-const cors = require("cors");
-
-// Load env vars
-dotenv.config();
+const orderRoutes = require("./routes/order.Routes");
+const adminRoutes = require("./routes/admin.Routes");
+const feedbackRoutes = require("./routes/feedback.routes");
 
 // Connect to Database
 connectDB();

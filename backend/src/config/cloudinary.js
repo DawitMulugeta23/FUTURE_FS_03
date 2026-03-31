@@ -1,4 +1,8 @@
-const cloudinary = require('cloudinary').v2;
+const path = require("path");
+const dotenv = require("dotenv");
+const cloudinary = require("cloudinary").v2;
+
+dotenv.config({ path: path.resolve(__dirname, "../../.env") });
 
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
