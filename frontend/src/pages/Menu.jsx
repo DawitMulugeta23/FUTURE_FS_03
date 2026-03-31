@@ -49,7 +49,9 @@ const Menu = () => {
               <p className="mb-2 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-sm font-medium">
                 <Sparkles size={16} /> Freshly prepared every day
               </p>
-              <h1 className="text-4xl font-bold md:text-5xl">Yesekela Café Menu</h1>
+              <h1 className="text-4xl font-bold md:text-5xl">
+                Yesekela Café Menu
+              </h1>
               <p className="mt-3 max-w-2xl text-sm text-amber-100 md:text-base">
                 Discover our coffee, pastries, meals, and refreshing drinks —
                 made with care and ready to enjoy.
@@ -60,7 +62,9 @@ const Menu = () => {
                 <Coffee size={24} />
                 <div>
                   <p className="text-sm">Available items</p>
-                  <p className="text-2xl font-bold text-white">{foods.length}</p>
+                  <p className="text-2xl font-bold text-white">
+                    {foods.length}
+                  </p>
                 </div>
               </div>
             </div>
@@ -105,7 +109,9 @@ const Menu = () => {
           </div>
         ) : filteredFoods.length === 0 ? (
           <div className="rounded-2xl bg-white p-10 text-center shadow-sm">
-            <h2 className="text-2xl font-bold text-amber-900">No items found</h2>
+            <h2 className="text-2xl font-bold text-amber-900">
+              No items found
+            </h2>
             <p className="mt-2 text-gray-500">
               Try a different search or category.
             </p>
