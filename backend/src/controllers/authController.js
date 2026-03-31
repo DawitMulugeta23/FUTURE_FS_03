@@ -25,7 +25,9 @@ exports.register = async (req, res) => {
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ success: false, error: "User already exists" });
+      return res
+        .status(400)
+        .json({ success: false, error: "User already exists" });
     }
 
     const user = await User.create({ name, email, password });
@@ -52,12 +54,16 @@ exports.login = async (req, res) => {
 
     const user = await User.findOne({ email }).select("+password");
     if (!user) {
-      return res.status(401).json({ success: false, error: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials" });
     }
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, error: "Invalid credentials" });
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials" });
     }
 
     sendTokenResponse(user, 200, res);

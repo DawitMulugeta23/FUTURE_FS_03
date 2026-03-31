@@ -2,13 +2,10 @@ import axios from "axios";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";
-import { useTheme } from "../context/useTheme";
-
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const navigate = useNavigate();
-  const { darkMode } = useTheme();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -17,7 +14,7 @@ const Login = () => {
         "http://localhost:5000/api/auth/login",
         { email, password },
       );
-      localStorage.setItem("token", data.token); // Store token for orders
+      localStorage.setItem("token", data.token);
       localStorage.setItem("userInfo", JSON.stringify(data.user));
       toast.success("Welcome back to Yesekela Café!");
       navigate("/menu");
@@ -27,23 +24,19 @@ const Login = () => {
   };
 
   return (
-    <div
-      className={`min-h-screen flex items-center justify-center px-4 ${darkMode ? "bg-gray-900" : "bg-amber-50"}`}
-    >
+    <div className="min-h-screen flex items-center justify-center bg-amber-50 px-4">
       <form
         onSubmit={handleLogin}
-        className={`w-full max-w-md rounded-2xl p-8 shadow-xl ${darkMode ? "bg-gray-800 text-white" : "bg-white text-gray-800"}`}
+        className="bg-white p-8 rounded-2xl shadow-xl w-full max-w-md"
       >
-        <h2
-          className={`mb-6 text-center text-3xl font-bold ${darkMode ? "text-amber-400" : "text-amber-900"}`}
-        >
+        <h2 className="text-3xl font-bold text-amber-900 mb-6 text-center">
           Login
         </h2>
         <div className="space-y-4">
           <input
             type="email"
             placeholder="Email"
-            className={`w-full rounded-xl border p-3 ${darkMode ? "border-gray-600 bg-gray-700 text-white placeholder:text-gray-300" : "border-gray-300 bg-white text-gray-800"}`}
+            className="w-full p-3 border rounded-xl"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -51,18 +44,18 @@ const Login = () => {
           <input
             type="password"
             placeholder="Password"
-            className={`w-full rounded-xl border p-3 ${darkMode ? "border-gray-600 bg-gray-700 text-white placeholder:text-gray-300" : "border-gray-300 bg-white text-gray-800"}`}
+            className="w-full p-3 border rounded-xl"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <button className="w-full rounded-xl bg-amber-900 py-3 font-bold text-white transition hover:bg-amber-800">
+          <button className="w-full bg-amber-900 text-white py-3 rounded-xl font-bold hover:bg-amber-800 transition">
             Sign In
           </button>
         </div>
-        <p className={`mt-4 text-center ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+        <p className="mt-4 text-center text-gray-600">
           New customer?{" "}
-          <Link to="/register" className="font-bold text-amber-700">
+          <Link to="/register" className="text-amber-700 font-bold">
             Create an account
           </Link>
         </p>

@@ -1,11 +1,9 @@
 import { Plus } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { useCart } from "../context/useCart";
-
 const FoodCard = ({ food }) => {
   const { addToCart } = useCart();
 
-  // Logic for adding to cart + showing the toast
   const handleAddToCart = () => {
     addToCart(food);
     toast.success(`${food.name} added to cart!`, {
@@ -15,13 +13,12 @@ const FoodCard = ({ food }) => {
         background: "#333",
         color: "#fff",
       },
-      duration: 2000, // Optional: how long it stays on screen
+      duration: 2000,
     });
   };
 
   return (
     <div className="bg-white rounded-2xl shadow-md overflow-hidden hover:shadow-xl transition-shadow group">
-      {/* Image Section */}
       <div className="relative h-48 overflow-hidden">
         <img
           src={food.image}
@@ -33,14 +30,12 @@ const FoodCard = ({ food }) => {
         </span>
       </div>
 
-      {/* Details Section */}
       <div className="p-4">
         <h3 className="text-xl font-bold text-gray-800">{food.name}</h3>
         <p className="text-gray-500 text-sm mb-4 line-clamp-2">
           {food.description}
         </p>
 
-        {/* Button - Now calling the correct handler */}
         <button
           onClick={handleAddToCart}
           className="w-full bg-amber-100 text-amber-900 font-bold py-2 rounded-xl flex items-center justify-center gap-2 hover:bg-amber-900 hover:text-white transition"

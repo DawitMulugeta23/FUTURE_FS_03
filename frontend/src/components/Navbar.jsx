@@ -1,16 +1,16 @@
 import {
-    ChevronDown,
-    ClipboardList,
-    Coffee,
-    LogOut,
-    Moon,
-    ShoppingCart,
-    Sun,
-    User,
+  ChevronDown,
+  ClipboardList,
+  Coffee,
+  LogOut,
+  Moon,
+  ShoppingCart,
+  Sun,
+  User,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { useCart } from "../context/CartContext";
+import { useCart } from "../context/useCart";
 import { useTheme } from "../context/useTheme";
 
 const Navbar = () => {
