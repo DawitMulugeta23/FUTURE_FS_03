@@ -1,9 +1,13 @@
 import axios from "axios";
 import { CreditCard, Trash2 } from "lucide-react";
+import { useState } from "react";
 import { useCart } from "../context/useCart";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const Cart = () => {
   const { cartItems, removeFromCart } = useCart();
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const totalPrice = cartItems.reduce(
     (acc, item) => acc + item.qty * item.price,
@@ -11,21 +15,38 @@ const Cart = () => {
   );
 
   const handleCheckout = async () => {
+    if (!cartItems.length || isProcessing) return;
+
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+      alert("Please login to complete your order.");
+      return;
+    }
+
     try {
-      const token = localStorage.getItem("token");
+      setIsProcessing(true);
 
       const { data } = await axios.post(
-        "http://localhost:5000/api/orders",
+        `${API_URL}/orders`,
         { orderItems: cartItems, totalPrice },
         { headers: { Authorization: `Bearer ${token}` } },
       );
 
-      if (data.checkout_url) {
-        window.location.href = data.checkout_url;
+      if (data?.checkout_url) {
+        window.location.assign(data.checkout_url);
+        return;
       }
+
+      alert("Unable to start payment. Please try again.");
     } catch (err) {
-      alert("Please login to complete your order!");
+      alert(
+        err.response?.data?.error ||
+          "Unable to start payment. Please try again.",
+      );
       console.error(err);
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -74,9 +95,13 @@ const Cart = () => {
             </h3>
             <button
               onClick={handleCheckout}
-              className="bg-amber-600 text-white px-10 py-4 rounded-xl font-bold text-lg flex items-center gap-2 hover:bg-amber-700 transition shadow-lg w-full md:w-auto"
+              disabled={isProcessing}
+              className="bg-amber-600 text-white px-10 py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 hover:bg-amber-700 transition shadow-lg w-full md:w-auto disabled:cursor-not-allowed disabled:opacity-70"
             >
-              <CreditCard size={22} /> Pay with Chapa (Telebirr/CBE)
+              <CreditCard size={22} />
+              {isProcessing
+                ? "Redirecting to Chapa..."
+                : "Pay with Chapa (Telebirr/CBE)"}
             </button>
           </div>
         </div>

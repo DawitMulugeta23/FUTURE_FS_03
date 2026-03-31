@@ -2,20 +2,40 @@ const Order = require("../models/Order");
 const Food = require("../models/Food");
 const axios = require("axios");
 
+const CHAPA_BASE_URL = process.env.CHAPA_BASE_URL || "https://api.chapa.co/v1";
+
+const getBackendBaseUrl = (req) =>
+  process.env.BACKEND_URL ||
+  process.env.BASE_URL ||
+  `${req.protocol}://${req.get("host")}`;
+
+const getFrontendBaseUrl = () =>
+  process.env.FRONTEND_URL || "http://localhost:5173";
+
 // @desc    Create new order & Initialize Chapa Payment
 // @route   POST /api/orders
 exports.createOrder = async (req, res) => {
   try {
     const { orderItems, totalPrice } = req.body;
 
-    if (!orderItems || orderItems.length === 0) {
-      return res.status(400).json({ message: "No order items" });
+    if (!process.env.CHAPA_SECRET_KEY) {
+      return res.status(500).json({
+        success: false,
+        error: "Chapa payment is not configured on the server.",
+      });
     }
 
-    // Generate a unique transaction reference
-    const tx_ref = `tx-yesekela-${Date.now()}-${Math.random().toString(36).substr(2, 6)}`;
+    if (!orderItems || orderItems.length === 0) {
+      return res.status(400).json({ success: false, error: "No order items" });
+    }
 
-    // 1. Create order in Database
+    if (!totalPrice || Number(totalPrice) <= 0) {
+      return res.status(400).json({ success: false, error: "Invalid order total" });
+    }
+
+    const tx_ref = `tx-yesekela-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const verificationUrl = `${getBackendBaseUrl(req)}/api/orders/verify/${tx_ref}`;
+
     const order = await Order.create({
       user: req.user.id,
       orderItems: orderItems.map((item) => ({
@@ -25,20 +45,20 @@ exports.createOrder = async (req, res) => {
         price: item.price,
         product: item._id,
       })),
-      totalPrice,
+      totalPrice: Number(totalPrice),
       paymentReference: tx_ref,
+      status: "Pending",
     });
 
-    // 2. Initialize Chapa Payment
     const chapaData = {
-      amount: totalPrice,
+      amount: Number(totalPrice).toFixed(2),
       currency: "ETB",
       email: req.user.email,
-      first_name: req.user.name.split(" ")[0],
-      last_name: req.user.name.split(" ")[1] || "",
-      tx_ref: tx_ref,
-      callback_url: `${process.env.BASE_URL || "http://localhost:5000"}/api/orders/verify/${tx_ref}`,
-      return_url: `${process.env.FRONTEND_URL || "http://localhost:5173"}/order-success`,
+      first_name: req.user.name?.split(" ")[0] || "Yesekela",
+      last_name: req.user.name?.split(" ").slice(1).join(" ") || "Customer",
+      tx_ref,
+      callback_url: verificationUrl,
+      return_url: verificationUrl,
       customization: {
         title: "Yesekela Cafe Order",
         description: `Order #${order._id.toString().slice(-6)}`,
@@ -46,7 +66,7 @@ exports.createOrder = async (req, res) => {
     };
 
     const response = await axios.post(
-      "https://api.chapa.co/v1/transaction/initialize",
+      `${CHAPA_BASE_URL}/transaction/initialize`,
       chapaData,
       {
         headers: {
@@ -56,61 +76,90 @@ exports.createOrder = async (req, res) => {
       },
     );
 
+    const checkoutUrl = response.data?.data?.checkout_url;
+
+    if (!checkoutUrl) {
+      return res.status(502).json({
+        success: false,
+        error: "Payment gateway did not return a checkout URL.",
+      });
+    }
+
     res.status(201).json({
       success: true,
       order,
-      checkout_url: response.data.data.checkout_url,
+      checkout_url: checkoutUrl,
     });
   } catch (err) {
-    console.error("Create order error:", err);
-    res.status(500).json({ success: false, error: err.message });
+    console.error("Create order error:", err.response?.data || err.message);
+    res.status(500).json({ success: false, error: err.response?.data?.message || err.message });
   }
 };
 
 // @desc    Verify Chapa Payment
 // @route   GET /api/orders/verify/:tx_ref
 exports.verifyPayment = async (req, res) => {
+  const frontendUrl = getFrontendBaseUrl();
+
   try {
     const { tx_ref } = req.params;
 
+    if (!process.env.CHAPA_SECRET_KEY) {
+      return res.redirect(
+        `${frontendUrl}/order-success?status=failed&ref=${encodeURIComponent(tx_ref)}`,
+      );
+    }
+
+    const order = await Order.findOne({ paymentReference: tx_ref });
+
+    if (!order) {
+      return res.redirect(
+        `${frontendUrl}/order-success?status=failed&ref=${encodeURIComponent(tx_ref)}`,
+      );
+    }
+
     const response = await axios.get(
-      `https://api.chapa.co/v1/transaction/verify/${tx_ref}`,
+      `${CHAPA_BASE_URL}/transaction/verify/${tx_ref}`,
       {
         headers: { Authorization: `Bearer ${process.env.CHAPA_SECRET_KEY}` },
       },
     );
 
-    if (response.data.status === "success") {
-      const order = await Order.findOneAndUpdate(
-        { paymentReference: tx_ref },
-        {
-          isPaid: true,
-          paidAt: Date.now(),
-          status: "Preparing",
-        },
-        { new: true },
-      );
+    const paymentSuccessful =
+      response.data?.status === "success" &&
+      response.data?.data?.status === "success";
 
-      if (order) {
-        // Update food items sold count
-        for (const item of order.orderItems) {
-          await Food.findByIdAndUpdate(item.product, {
-            $inc: { soldCount: item.quantity },
-          });
-        }
+    if (paymentSuccessful) {
+      if (!order.isPaid) {
+        order.isPaid = true;
+        order.paidAt = new Date();
+        order.status = order.status === "Pending" ? "Preparing" : order.status;
+        await order.save();
+
+        await Promise.all(
+          order.orderItems.map((item) =>
+            item.product
+              ? Food.findByIdAndUpdate(item.product, {
+                  $inc: { soldCount: item.quantity },
+                })
+              : Promise.resolve(),
+          ),
+        );
       }
 
-      res.redirect(
-        `${process.env.FRONTEND_URL || "http://localhost:5173"}/order-success?ref=${tx_ref}`,
-      );
-    } else {
-      res.redirect(
-        `${process.env.FRONTEND_URL || "http://localhost:5173"}/order-failed`,
+      return res.redirect(
+        `${frontendUrl}/order-success?status=success&ref=${encodeURIComponent(tx_ref)}`,
       );
     }
+
+    return res.redirect(
+      `${frontendUrl}/order-success?status=failed&ref=${encodeURIComponent(tx_ref)}`,
+    );
   } catch (err) {
-    console.error("Payment verification error:", err);
-    res.status(500).json({ message: "Payment verification failed" });
+    console.error("Payment verification error:", err.response?.data || err.message);
+    return res.redirect(
+      `${frontendUrl}/order-success?status=failed&ref=${encodeURIComponent(req.params.tx_ref)}`,
+    );
   }
 };
 
