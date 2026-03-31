@@ -1,16 +1,8 @@
-import { createContext, useContext, useState } from "react";
+/* eslint-disable react-refresh/only-export-components */
+import { useState } from "react";
+import CartContext from "./cart-context";
 
-export const CartContext = createContext();
-
-export const useCart = () => {
-  const context = useContext(CartContext);
-
-  if (!context) {
-    throw new Error("useCart must be used within a CartProvider");
-  }
-
-  return context;
-};
+export { useCart } from "./useCart";
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
@@ -65,5 +57,3 @@ export const CartProvider = ({ children }) => {
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 };
-
-export default CartContext;

@@ -1,26 +1,22 @@
-import { useCart } from '../context/CartContext';
-import axios from 'axios';
-import { Trash2, CreditCard } from 'lucide-react';
+import { useCart } from "../context/useCart";
+import axios from "axios";
+import { Trash2, CreditCard } from "lucide-react";
 
 const Cart = () => {
   const { cartItems, removeFromCart } = useCart();
-  
-  // Calculate Total
+
   const totalPrice = cartItems.reduce((acc, item) => acc + item.qty * item.price, 0);
 
   const handleCheckout = async () => {
     try {
-      // 1. Get the token from localStorage (assuming user is logged in)
-      const token = localStorage.getItem('token'); 
-      
-      // 2. Call your backend Order API
+      const token = localStorage.getItem("token");
+
       const { data } = await axios.post(
-        'http://localhost:5000/api/orders',
+        "http://localhost:5000/api/orders",
         { orderItems: cartItems, totalPrice },
         { headers: { Authorization: `Bearer ${token}` } }
       );
 
-      // 3. Redirect user to Chapa's hosted checkout page
       if (data.checkout_url) {
         window.location.href = data.checkout_url;
       }
@@ -33,7 +29,7 @@ const Cart = () => {
   return (
     <div className="container mx-auto p-6 max-w-4xl">
       <h2 className="text-3xl font-bold mb-6 text-amber-900">Your Shopping Cart</h2>
-      
+
       {cartItems.length === 0 ? (
         <p className="text-gray-500 text-center text-xl">Your cart is empty. Go grab some coffee!</p>
       ) : (

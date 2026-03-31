@@ -2,7 +2,8 @@ import { Toaster } from "react-hot-toast";
 import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
 import ProtectedRoute from "./components/ProtectedRoute";
-import { CartProvider } from "./context/CartContext"; // Import from CartContext.jsx
+import { CartProvider } from "./context/CartContext";
+import { ThemeProvider } from "./context/ThemeContext";
 import About from "./pages/About";
 import AdminDashboard from "./pages/AdminDashboard";
 import Cart from "./pages/Cart";
@@ -15,35 +16,37 @@ import Register from "./pages/Register";
 
 function App() {
   return (
-    <CartProvider>
-      <Toaster position="top-center" reverseOrder={false} />
-      <Navbar />
-      <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/about" element={<About />} />
-        <Route path="/menu" element={<Menu />} />
-        <Route path="/cart" element={<Cart />} />
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/order-success" element={<OrderSuccess />} />
-        <Route
-          path="/myorders"
-          element={
-            <ProtectedRoute>
-              <Orders />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/admin/*"
-          element={
-            <ProtectedRoute isAdmin={true}>
-              <AdminDashboard />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </CartProvider>
+    <ThemeProvider>
+      <CartProvider>
+        <Toaster position="top-center" reverseOrder={false} />
+        <Navbar />
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/about" element={<About />} />
+          <Route path="/menu" element={<Menu />} />
+          <Route path="/cart" element={<Cart />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/order-success" element={<OrderSuccess />} />
+          <Route
+            path="/myorders"
+            element={
+              <ProtectedRoute>
+                <Orders />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/admin/*"
+            element={
+              <ProtectedRoute isAdmin={true}>
+                <AdminDashboard />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </CartProvider>
+    </ThemeProvider>
   );
 }
 

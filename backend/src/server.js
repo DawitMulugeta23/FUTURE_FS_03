@@ -1,11 +1,11 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./config/db");
-// RIGHT ✅
-const authRoutes = require("./routes/auth");
-const foodRoutes = require("./routes/foodRoutes");
+const authRoutes = require("./routes/auth.routes");
+const foodRoutes = require("./routes/food.Routes");
 const orderRoutes = require("./routes/orderRoutes");
-const cors = require('cors');
+const adminRoutes = require("./routes/admin.routes");
+const cors = require("cors");
 
 // Load env vars
 dotenv.config();
@@ -14,13 +14,54 @@ dotenv.config();
 connectDB();
 
 const app = express();
-app.use(cors());
-app.use(express.json());
+
+// Comprehensive CORS configuration
+const corsOptions = {
+  origin: [
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+    "http://localhost:5174",
+    "http://127.0.0.1:5174",
+  ],
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+  allowedHeaders: [
+    "Content-Type",
+    "Authorization",
+    "X-Requested-With",
+    "Accept",
+  ],
+  exposedHeaders: ["Content-Range", "X-Content-Range"],
+  optionsSuccessStatus: 200,
+};
+
+app.use(cors(corsOptions));
+
+// Handle preflight requests
+app.options(/.*/, cors(corsOptions));
+
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ extended: true, limit: "50mb" }));
+
+app.get("/", (req, res) => {
+  res.json({ success: true, message: "Yesekela Café API is running" });
+});
 
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/food", foodRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/admin", adminRoutes);
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error("Error:", err.stack);
+  res.status(err.statusCode || 500).json({
+    success: false,
+    error: err.message || "Server Error",
+  });
+});
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

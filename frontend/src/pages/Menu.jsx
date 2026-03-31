@@ -1,7 +1,6 @@
 import axios from "axios";
 import { useEffect, useState } from "react";
-import { useCart } from "../context/CartContext";
-
+import { useCart } from "../context/useCart";
 const Menu = () => {
   const [foods, setFoods] = useState([]);
   const { addToCart } = useCart();

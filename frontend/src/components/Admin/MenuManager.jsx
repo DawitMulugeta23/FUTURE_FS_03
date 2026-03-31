@@ -82,7 +82,7 @@ const MenuManager = () => {
       fetchMenuItems();
     } catch (err) {
       console.error("Error saving menu item", err);
-      toast.error("Failed to save menu item");
+      toast.error(err.response?.data?.error || "Failed to save menu item");
     }
   };
 
