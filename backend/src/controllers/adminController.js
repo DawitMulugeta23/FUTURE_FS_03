@@ -29,7 +29,7 @@ export const countUser = async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 };
-export const SingleUser = async (req, res) => {
+export const updateUser = async (req, res) => {
   try {
     const { role } = req.body;
     const user = await User.findByIdAndUpdate(
