@@ -6,9 +6,10 @@ const fs = require("fs");
 // @route   POST /api/food
 exports.addFood = async (req, res) => {
   try {
-    const { name, description, price, category } = req.body;
+    const { name, description, price, category, isAvailable } = req.body;
     let imageUrl = "";
 
+    // Validate required fields
     if (!name || !description || !price || !category) {
       return res.status(400).json({
         success: false,
@@ -16,18 +17,28 @@ exports.addFood = async (req, res) => {
       });
     }
 
-    // Handle image upload
+    // Handle image upload with better error handling
     if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "yesekela_cafe",
-      });
-      imageUrl = result.secure_url;
-      if (req.file.path) fs.unlinkSync(req.file.path);
-    } else if (req.body.imagePath && typeof req.body.imagePath === "string") {
-      const result = await cloudinary.uploader.upload(req.body.imagePath, {
-        folder: "yesekela_cafe",
-      });
-      imageUrl = result.secure_url;
+      try {
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: "yesekela_cafe/menu",
+          transformation: [
+            { width: 800, height: 600, crop: "limit" },
+            { quality: "auto" },
+          ],
+        });
+        imageUrl = result.secure_url;
+        if (req.file.path) fs.unlinkSync(req.file.path);
+      } catch (uploadError) {
+        console.error("Cloudinary upload error:", uploadError);
+        return res.status(400).json({
+          success: false,
+          error: "Failed to upload image. Please try again.",
+        });
+      }
+    } else if (req.body.imageUrl) {
+      // Handle image URL if provided
+      imageUrl = req.body.imageUrl;
     } else {
       return res.status(400).json({
         success: false,
@@ -36,27 +47,45 @@ exports.addFood = async (req, res) => {
     }
 
     const food = await Food.create({
-      name,
-      description,
+      name: name.trim(),
+      description: description.trim(),
       price: Number(price),
       category,
       image: imageUrl,
+      isAvailable: isAvailable !== undefined ? isAvailable : true,
     });
 
-    res.status(201).json({ success: true, data: food });
+    res.status(201).json({
+      success: true,
+      data: food,
+      message: "Menu item added successfully!",
+    });
   } catch (err) {
     console.error("Add food error:", err);
     res.status(400).json({ success: false, error: err.message });
   }
 };
 
-// @desc    Get all food items
+// @desc    Get all food items with filtering
 // @route   GET /api/food
 exports.getMenu = async (req, res) => {
   try {
-    const menu = await Food.find().sort("category");
+    const { category, search, isAvailable } = req.query;
+    let filter = {};
+
+    if (category) filter.category = category;
+    if (isAvailable !== undefined) filter.isAvailable = isAvailable === "true";
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { description: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const menu = await Food.find(filter).sort({ category: 1, name: 1 });
     res.status(200).json({ success: true, data: menu });
   } catch (err) {
+    console.error("Get menu error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
@@ -67,19 +96,47 @@ exports.updateFood = async (req, res) => {
   try {
     const { name, description, price, category, isAvailable } = req.body;
     const updateData = {
-      name,
-      description,
+      name: name?.trim(),
+      description: description?.trim(),
       price: price !== undefined ? Number(price) : undefined,
       category,
-      isAvailable,
+      isAvailable: isAvailable !== undefined ? isAvailable : undefined,
     };
 
+    // Remove undefined fields
+    Object.keys(updateData).forEach(
+      (key) => updateData[key] === undefined && delete updateData[key],
+    );
+
     if (req.file) {
-      const result = await cloudinary.uploader.upload(req.file.path, {
-        folder: "yesekela_cafe",
-      });
-      updateData.image = result.secure_url;
-      if (req.file.path) fs.unlinkSync(req.file.path);
+      try {
+        // Get existing food to delete old image
+        const existingFood = await Food.findById(req.params.id);
+        if (existingFood && existingFood.image) {
+          const publicId = existingFood.image
+            .split("/")
+            .slice(-2)
+            .join("/")
+            .split(".")[0];
+          await cloudinary.uploader.destroy(publicId);
+        }
+
+        const result = await cloudinary.uploader.upload(req.file.path, {
+          folder: "yesekela_cafe/menu",
+          transformation: [
+            { width: 800, height: 600, crop: "limit" },
+            { quality: "auto" },
+          ],
+        });
+        updateData.image = result.secure_url;
+        if (req.file.path) fs.unlinkSync(req.file.path);
+      } catch (uploadError) {
+        console.error("Cloudinary upload error:", uploadError);
+        return res.status(400).json({
+          success: false,
+          error: "Failed to upload image. Please try again.",
+        });
+      }
     }
 
     const food = await Food.findByIdAndUpdate(req.params.id, updateData, {
@@ -91,8 +148,13 @@ exports.updateFood = async (req, res) => {
       return res.status(404).json({ success: false, error: "Food not found" });
     }
 
-    res.status(200).json({ success: true, data: food });
+    res.status(200).json({
+      success: true,
+      data: food,
+      message: "Menu item updated successfully!",
+    });
   } catch (err) {
+    console.error("Update food error:", err);
     res.status(400).json({ success: false, error: err.message });
   }
 };
@@ -106,17 +168,50 @@ exports.deleteFood = async (req, res) => {
       return res.status(404).json({ success: false, error: "Food not found" });
     }
 
-    // Delete from cloudinary if needed
+    // Delete image from cloudinary
     if (food.image) {
-      const publicId = food.image.split("/").pop().split(".")[0];
-      await cloudinary.uploader.destroy(`yesekela_cafe/${publicId}`);
+      try {
+        const publicId = food.image
+          .split("/")
+          .slice(-2)
+          .join("/")
+          .split(".")[0];
+        await cloudinary.uploader.destroy(publicId);
+      } catch (cloudinaryError) {
+        console.error("Cloudinary delete error:", cloudinaryError);
+      }
     }
 
     await food.deleteOne();
-    res
-      .status(200)
-      .json({ success: true, message: "Food deleted successfully" });
+    res.status(200).json({
+      success: true,
+      message: "Menu item deleted successfully!",
+    });
   } catch (err) {
+    console.error("Delete food error:", err);
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+
+// @desc    Toggle food availability
+// @route   PATCH /api/food/:id/toggle
+exports.toggleAvailability = async (req, res) => {
+  try {
+    const food = await Food.findById(req.params.id);
+    if (!food) {
+      return res.status(404).json({ success: false, error: "Food not found" });
+    }
+
+    food.isAvailable = !food.isAvailable;
+    await food.save();
+
+    res.status(200).json({
+      success: true,
+      data: food,
+      message: `Item is now ${food.isAvailable ? "available" : "unavailable"}`,
+    });
+  } catch (err) {
+    console.error("Toggle availability error:", err);
     res.status(400).json({ success: false, error: err.message });
   }
 };

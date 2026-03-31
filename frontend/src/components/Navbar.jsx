@@ -12,7 +12,8 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useCart } from "../context/useCart";
 import { useTheme } from "../context/useTheme";
-
+import { MessageSquare } from "lucide-react";
+import FeedbackModal from "./FeedbackModal";
 const Navbar = () => {
   const { cartItems } = useCart();
   const { darkMode, toggleDarkMode } = useTheme();
@@ -21,7 +22,7 @@ const Navbar = () => {
 
   const itemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
-
+  const [showFeedback, setShowFeedback] = useState(false);
   const handleLogout = () => {
     localStorage.removeItem("token");
     localStorage.removeItem("userInfo");
@@ -43,6 +44,17 @@ const Navbar = () => {
 
         {/* Right Side: Navigation Links */}
         <div className="flex gap-4 items-center">
+        {userInfo && (
+            <button
+                onClick={() => setShowFeedback(true)}
+                className="p-2 rounded-full hover:bg-amber-800 transition relative"
+                title="Give Feedback"
+            >
+                <MessageSquare size={20} />
+            </button>
+            )}
+
+            <FeedbackModal isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
           <Link
             to="/menu"
             className="hover:text-amber-400 transition font-medium"

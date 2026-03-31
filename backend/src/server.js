@@ -5,6 +5,7 @@ const authRoutes = require("./routes/auth.routes");
 const foodRoutes = require("./routes/food.Routes");
 const orderRoutes = require("./routes/orderRoutes");
 const adminRoutes = require("./routes/admin.routes");
+const feedbackRoutes = require("./routes/feedback.routes"); // Make sure this is added
 const cors = require("cors");
 
 // Load env vars
@@ -37,8 +38,6 @@ const corsOptions = {
 };
 
 app.use(cors(corsOptions));
-
-// Handle preflight requests
 app.options(/.*/, cors(corsOptions));
 
 app.use(express.json({ limit: "50mb" }));
@@ -48,10 +47,11 @@ app.get("/", (req, res) => {
   res.json({ success: true, message: "Yesekela Café API is running" });
 });
 
-// Routes
+// Routes - ORDER MATTERS! More specific routes first
 app.use("/api/auth", authRoutes);
 app.use("/api/food", foodRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/feedback", feedbackRoutes); // Add this line
 app.use("/api/admin", adminRoutes);
 
 // Error handling middleware
@@ -60,6 +60,14 @@ app.use((err, req, res, next) => {
   res.status(err.statusCode || 500).json({
     success: false,
     error: err.message || "Server Error",
+  });
+});
+
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    error: `Route ${req.originalUrl} not found`,
   });
 });
 

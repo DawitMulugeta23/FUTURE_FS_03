@@ -3,9 +3,23 @@ const router = express.Router();
 const { protect, authorize } = require("../middleware/authMiddleware");
 const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
+const {
+  getAllFeedback,
+  replyToFeedback,
+  deleteFeedback,
+} = require("../controllers/feedback.controller");
 
-// Get all users
-router.get("/users", protect, authorize("admin"), async (req, res) => {
+// Debug middleware
+router.use((req, res, next) => {
+  console.log(`[Admin Routes] ${req.method} ${req.originalUrl}`);
+  next();
+});
+
+// Protect all admin routes
+router.use(protect, authorize("admin"));
+
+// User management
+router.get("/users", async (req, res) => {
   try {
     const users = await User.find({}).select("-password");
     res.json({ success: true, users });
@@ -14,8 +28,7 @@ router.get("/users", protect, authorize("admin"), async (req, res) => {
   }
 });
 
-// Get user count
-router.get("/users/count", protect, authorize("admin"), async (req, res) => {
+router.get("/users/count", async (req, res) => {
   try {
     const { filter } = req.query;
     let query = {};
@@ -34,8 +47,7 @@ router.get("/users/count", protect, authorize("admin"), async (req, res) => {
   }
 });
 
-// Update user role
-router.put("/users/:id/role", protect, authorize("admin"), async (req, res) => {
+router.put("/users/:id/role", async (req, res) => {
   try {
     const { role } = req.body;
     const user = await User.findByIdAndUpdate(
@@ -54,8 +66,7 @@ router.put("/users/:id/role", protect, authorize("admin"), async (req, res) => {
   }
 });
 
-// Delete user
-router.delete("/users/:id", protect, authorize("admin"), async (req, res) => {
+router.delete("/users/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
 
@@ -76,47 +87,39 @@ router.delete("/users/:id", protect, authorize("admin"), async (req, res) => {
   }
 });
 
-// Send email campaign
-router.post(
-  "/email/campaign",
-  protect,
-  authorize("admin"),
-  async (req, res) => {
-    try {
-      const { subject, message, userFilter } = req.body;
-      let query = {};
+// Email campaign routes
+router.post("/email/campaign", async (req, res) => {
+  try {
+    const { subject, message, userFilter } = req.body;
+    let query = {};
 
-      if (userFilter === "customers") query.role = "user";
-      if (userFilter === "active") {
-        const thirtyDaysAgo = new Date();
-        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
-        query.createdAt = { $gte: thirtyDaysAgo };
-      }
-
-      const users = await User.find(query);
-
-      // Send emails asynchronously
-      const emailPromises = users.map((user) =>
-        sendEmail({
-          email: user.email,
-          subject,
-          message: `Hello ${user.name},\n\n${message}\n\nBest regards,\nYesekela Café Team`,
-        }).catch((err) =>
-          console.error(`Failed to send to ${user.email}:`, err),
-        ),
-      );
-
-      await Promise.all(emailPromises);
-
-      res.json({ success: true, count: users.length });
-    } catch (err) {
-      res.status(500).json({ success: false, error: err.message });
+    if (userFilter === "customers") query.role = "user";
+    if (userFilter === "active") {
+      const thirtyDaysAgo = new Date();
+      thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+      query.createdAt = { $gte: thirtyDaysAgo };
     }
-  },
-);
 
-// Send single email
-router.post("/send-email", protect, authorize("admin"), async (req, res) => {
+    const users = await User.find(query);
+
+    // Send emails asynchronously
+    const emailPromises = users.map((user) =>
+      sendEmail({
+        email: user.email,
+        subject,
+        message: `Hello ${user.name},\n\n${message}\n\nBest regards,\nYesekela Café Team`,
+      }).catch((err) => console.error(`Failed to send to ${user.email}:`, err)),
+    );
+
+    await Promise.all(emailPromises);
+
+    res.json({ success: true, count: users.length });
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+});
+
+router.post("/send-email", async (req, res) => {
   try {
     const { userId, subject, message } = req.body;
     const user = await User.findById(userId);
@@ -137,10 +140,9 @@ router.post("/send-email", protect, authorize("admin"), async (req, res) => {
   }
 });
 
-// Get settings
-router.get("/settings", protect, authorize("admin"), async (req, res) => {
+// Settings routes
+router.get("/settings", async (req, res) => {
   try {
-    // You can create a Settings model or return default settings
     const settings = {
       cafeName: "Yesekela Café",
       email: "info@yesekelacafe.com",
@@ -158,15 +160,17 @@ router.get("/settings", protect, authorize("admin"), async (req, res) => {
   }
 });
 
-// Update settings
-router.put("/settings", protect, authorize("admin"), async (req, res) => {
+router.put("/settings", async (req, res) => {
   try {
-    // Here you would save settings to a Settings model
-    // For now, just return success
     res.json({ success: true, message: "Settings updated successfully" });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
+// Feedback management routes
+router.get("/feedback", getAllFeedback);
+router.post("/feedback/:id/reply", replyToFeedback);
+router.delete("/feedback/:id", deleteFeedback);
 
 module.exports = router;

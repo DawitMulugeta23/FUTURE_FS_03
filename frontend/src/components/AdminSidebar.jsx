@@ -7,6 +7,7 @@ import {
   ShoppingBag,
   Users,
   Utensils,
+  MessageSquare,
 } from "lucide-react";
 import { NavLink } from "react-router-dom";
 
@@ -25,6 +26,7 @@ const AdminSidebar = () => {
     { path: "/admin/email", icon: Mail, label: "Email Campaign" },
     { path: "/admin/location", icon: MapPin, label: "Location" },
     { path: "/admin/settings", icon: Settings, label: "Settings" },
+    { path: "/admin/feedback", icon: MessageSquare, label: "Feedback" }
   ];
 
   return (

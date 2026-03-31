@@ -11,7 +11,7 @@ import AdminSidebar from "../components/AdminSidebar";
 import EmailCampaign from "../components/EmailCampaign";
 import MapComponent from "../components/MapComponent";
 import { useTheme } from "../context/useTheme";
-
+import FeedbackManager from "../components/Admin/FeedbackManager";
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -240,6 +240,8 @@ const AdminDashboard = () => {
             <Route path="/orders" element={<OrdersManager />} />
             <Route path="/users" element={<UsersManager />} />
             <Route path="/email" element={<EmailCampaign />} />
+            <Route path="/feedback" element={<FeedbackManager />} />
+            
             <Route
               path="/location"
               element={
