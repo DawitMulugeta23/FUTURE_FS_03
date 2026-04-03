@@ -6,14 +6,22 @@ const fs = require("fs");
 // @route   POST /api/food
 exports.addFood = async (req, res) => {
   try {
-    const { name, description, price, category, isAvailable } = req.body;
+    const { name, description, price, category, isAvailable, quantity } = req.body;
     let imageUrl = "";
 
     // Validate required fields
-    if (!name || !description || !price || !category) {
+    if (!name || !description || !price || !category || quantity === undefined) {
       return res.status(400).json({
         success: false,
-        error: "Name, description, price, and category are required",
+        error: "Name, description, price, category, and quantity are required",
+      });
+    }
+
+    const parsedQuantity = Number(quantity);
+    if (Number.isNaN(parsedQuantity) || parsedQuantity < 0) {
+      return res.status(400).json({
+        success: false,
+        error: "Quantity must be a valid number greater than or equal to 0",
       });
     }
 
@@ -50,6 +58,7 @@ exports.addFood = async (req, res) => {
       name: name.trim(),
       description: description.trim(),
       price: Number(price),
+      quantity: parsedQuantity,
       category,
       image: imageUrl,
       isAvailable: isAvailable !== undefined ? isAvailable : true,
@@ -94,11 +103,23 @@ exports.getMenu = async (req, res) => {
 // @route   PUT /api/food/:id
 exports.updateFood = async (req, res) => {
   try {
-    const { name, description, price, category, isAvailable } = req.body;
+    const { name, description, price, category, isAvailable, quantity } = req.body;
+
+    if (
+      quantity !== undefined &&
+      (Number.isNaN(Number(quantity)) || Number(quantity) < 0)
+    ) {
+      return res.status(400).json({
+        success: false,
+        error: "Quantity must be a valid number greater than or equal to 0",
+      });
+    }
+
     const updateData = {
       name: name?.trim(),
       description: description?.trim(),
       price: price !== undefined ? Number(price) : undefined,
+      quantity: quantity !== undefined ? Number(quantity) : undefined,
       category,
       isAvailable: isAvailable !== undefined ? isAvailable : undefined,
     };

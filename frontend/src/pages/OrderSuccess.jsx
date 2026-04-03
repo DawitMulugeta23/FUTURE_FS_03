@@ -42,7 +42,8 @@ const OrderSuccess = () => {
 
         {ref && (
           <p className="mt-4 text-sm text-gray-500">
-            Reference: <span className="font-semibold text-gray-700">{ref}</span>
+            Reference:{" "}
+            <span className="font-semibold text-gray-700">{ref}</span>
           </p>
         )}
 
@@ -53,7 +54,10 @@ const OrderSuccess = () => {
           >
             {isFailed ? "Try Again" : "View My Orders"}
           </Link>
-          <Link to="/" className="rounded-full border border-amber-600 px-6 py-3 font-bold text-amber-700 hover:bg-amber-50">
+          <Link
+            to="/"
+            className="rounded-full border border-amber-600 px-6 py-3 font-bold text-amber-700 hover:bg-amber-50"
+          >
             Back to Home
           </Link>
         </div>

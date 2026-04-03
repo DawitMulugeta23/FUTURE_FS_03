@@ -7,15 +7,19 @@ export { useCart } from "./useCart";
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);
 
-  const addToCart = (item) => {
+  const addToCart = (item, selectedQty = 1) => {
+    const quantityToAdd = Math.max(1, Number(selectedQty) || 1);
+
     setCartItems((prev) => {
       const existingItem = prev.find((i) => i._id === item._id);
       if (existingItem) {
         return prev.map((i) =>
-          i._id === item._id ? { ...i, qty: i.qty + 1 } : i,
+          i._id === item._id
+            ? { ...i, qty: i.qty + quantityToAdd }
+            : i,
         );
       }
-      return [...prev, { ...item, qty: 1 }];
+      return [...prev, { ...item, qty: quantityToAdd }];
     });
   };
 

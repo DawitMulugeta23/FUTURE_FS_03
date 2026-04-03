@@ -4,6 +4,7 @@ const AddFoodForm = () => {
   const [formData, setFormData] = useState({
     name: "",
     price: "",
+    quantity: "1",
     category: "Coffee",
     description: "",
   });
@@ -15,6 +16,8 @@ const AddFoodForm = () => {
     const data = new FormData();
     data.append("name", formData.name);
     data.append("price", formData.price);
+    data.append("quantity", formData.quantity);
+    data.append("category", formData.category);
     data.append("description", formData.description);
     data.append("imagePath", image); // This goes to Cloudinary via backend
 
@@ -43,6 +46,13 @@ const AddFoodForm = () => {
           placeholder="Price (ETB)"
           className="w-full p-3 border rounded-xl"
           onChange={(e) => setFormData({ ...formData, price: e.target.value })}
+        />
+        <input
+          type="number"
+          min="0"
+          placeholder="Quantity"
+          className="w-full p-3 border rounded-xl"
+          onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
         />
         <textarea
           placeholder="Description"

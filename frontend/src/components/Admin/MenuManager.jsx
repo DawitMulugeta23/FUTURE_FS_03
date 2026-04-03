@@ -10,6 +10,7 @@ const MenuManager = () => {
   const [currentItem, setCurrentItem] = useState({
     name: "",
     price: "",
+    quantity: "1",
     description: "",
     category: "Coffee",
     image: null,
@@ -47,6 +48,7 @@ const MenuManager = () => {
     const formData = new FormData();
     formData.append("name", currentItem.name);
     formData.append("price", currentItem.price);
+    formData.append("quantity", currentItem.quantity);
     formData.append("description", currentItem.description);
     formData.append("category", currentItem.category);
     if (currentItem.image) {
@@ -92,6 +94,7 @@ const MenuManager = () => {
     setCurrentItem({
       name: item.name,
       price: item.price,
+      quantity: item.quantity ?? 1,
       description: item.description,
       category: item.category,
       image: null,
@@ -120,6 +123,7 @@ const MenuManager = () => {
     setCurrentItem({
       name: "",
       price: "",
+      quantity: "1",
       description: "",
       category: "Coffee",
       image: null,
@@ -166,6 +170,21 @@ const MenuManager = () => {
                 type="number"
                 name="price"
                 value={currentItem.price}
+                onChange={handleInputChange}
+                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                required
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Quantity
+              </label>
+              <input
+                type="number"
+                name="quantity"
+                min="0"
+                value={currentItem.quantity}
                 onChange={handleInputChange}
                 className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
                 required
@@ -260,6 +279,9 @@ const MenuManager = () => {
                   Price
                 </th>
                 <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">
+                  Quantity
+                </th>
+                <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">
                   Actions
                 </th>
               </tr>
@@ -282,6 +304,9 @@ const MenuManager = () => {
                   </td>
                   <td className="px-4 py-3 font-bold text-amber-900">
                     {item.price} ETB
+                  </td>
+                  <td className="px-4 py-3 font-semibold text-gray-700">
+                    {item.quantity ?? 0}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">

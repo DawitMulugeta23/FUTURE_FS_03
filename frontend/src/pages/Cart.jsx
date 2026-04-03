@@ -1,12 +1,12 @@
 import axios from "axios";
-import { CreditCard, Trash2 } from "lucide-react";
+import { CreditCard, Minus, Plus, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { useCart } from "../context/useCart";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const Cart = () => {
-  const { cartItems, removeFromCart } = useCart();
+  const { cartItems, removeFromCart, updateQuantity } = useCart();
   const [isProcessing, setIsProcessing] = useState(false);
 
   const totalPrice = cartItems.reduce(
@@ -75,9 +75,30 @@ const Cart = () => {
                 />
                 <div>
                   <h4 className="font-bold text-lg">{item.name}</h4>
-                  <p className="text-gray-500">
-                    {item.qty} x {item.price} ETB
-                  </p>
+                  <p className="text-gray-500">{item.price} ETB each</p>
+
+                  <div className="mt-2 flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item._id, item.qty - 1)}
+                      className="rounded-lg bg-amber-100 p-1 text-amber-900 hover:bg-amber-200"
+                    >
+                      <Minus size={16} />
+                    </button>
+                    <span className="min-w-8 text-center font-semibold text-gray-700">
+                      {item.qty}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => updateQuantity(item._id, item.qty + 1)}
+                      className="rounded-lg bg-amber-100 p-1 text-amber-900 hover:bg-amber-200"
+                    >
+                      <Plus size={16} />
+                    </button>
+                    <span className="ml-2 text-sm font-medium text-amber-700">
+                      = {item.qty * item.price} ETB
+                    </span>
+                  </div>
                 </div>
               </div>
               <button
