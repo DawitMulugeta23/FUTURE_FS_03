@@ -17,13 +17,6 @@ const getFrontendBaseUrl = () =>
 // @route   POST /api/orders
 exports.createOrder = async (req, res) => {
   try {
-    if (!req.user.role === "admin") {
-      return res.status(403).json({
-        success: false,
-        error:
-          "admin cannot place orders. Please use a customer account for ordering.",
-      });
-    }
     // PREVENT ADMINS FROM PLACING ORDERS
     if (req.user.role === "admin") {
       return res.status(403).json({
@@ -118,8 +111,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// @desc    Verify Chapa Payment
-// @route   GET /api/orders/verify/:tx_ref
+// Rest of the file remains the same...
 exports.verifyPayment = async (req, res) => {
   const frontendUrl = getFrontendBaseUrl();
 
@@ -188,8 +180,6 @@ exports.verifyPayment = async (req, res) => {
   }
 };
 
-// @desc    Get logged in user orders
-// @route   GET /api/orders/myorders
 exports.getMyOrders = async (req, res) => {
   try {
     const orders = await Order.find({ user: req.user.id }).sort("-createdAt");
@@ -199,21 +189,17 @@ exports.getMyOrders = async (req, res) => {
   }
 };
 
-// @desc    Get Admin Stats with Analytics
-// @route   GET /api/orders/stats
 exports.getAdminStats = async (req, res) => {
   try {
     const totalOrders = await Order.countDocuments();
     const paidOrders = await Order.find({ isPaid: true });
 
-    // Calculate total revenue
     const totalRevenue = paidOrders.reduce(
       (acc, order) => acc + order.totalPrice,
       0,
     );
     const pendingOrders = await Order.countDocuments({ isPaid: false });
 
-    // Get today's stats
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
@@ -238,7 +224,6 @@ exports.getAdminStats = async (req, res) => {
       },
     ]);
 
-    // Get order status distribution
     const statusDistribution = await Order.aggregate([
       {
         $group: {
@@ -248,7 +233,6 @@ exports.getAdminStats = async (req, res) => {
       },
     ]);
 
-    // Get top selling items
     const topSellingItems = await Order.aggregate([
       { $match: { isPaid: true } },
       { $unwind: "$orderItems" },
@@ -266,7 +250,6 @@ exports.getAdminStats = async (req, res) => {
       { $limit: 10 },
     ]);
 
-    // Get daily sales for chart
     const last7Days = [];
     for (let i = 6; i >= 0; i--) {
       const date = new Date();
@@ -321,8 +304,6 @@ exports.getAdminStats = async (req, res) => {
   }
 };
 
-// @desc    Get all orders (Admin)
-// @route   GET /api/orders
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
@@ -334,8 +315,6 @@ exports.getAllOrders = async (req, res) => {
   }
 };
 
-// @desc    Update order status
-// @route   PUT /api/orders/:id/status
 exports.updateOrderStatus = async (req, res) => {
   try {
     const { status } = req.body;
@@ -355,8 +334,6 @@ exports.updateOrderStatus = async (req, res) => {
   }
 };
 
-// @desc    Get order details
-// @route   GET /api/orders/:id
 exports.getOrderDetails = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id)
