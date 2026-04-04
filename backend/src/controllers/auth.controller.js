@@ -21,7 +21,6 @@ const sendTokenResponse = (user, statusCode, res) => {
       email: user.email,
       role: user.role,
       phone: user.phone,
-      deliveryAddress: user.deliveryAddress,
     },
   });
 };
@@ -29,7 +28,7 @@ const sendTokenResponse = (user, statusCode, res) => {
 // Customer Registration
 exports.registerCustomer = async (req, res) => {
   try {
-    const { name, email, password, phone, deliveryAddress } = req.body;
+    const { name, email, password, phone } = req.body;
 
     // Check if user exists
     const existingUser = await User.findOne({ email });
@@ -39,14 +38,17 @@ exports.registerCustomer = async (req, res) => {
         .json({ success: false, error: "Email already registered" });
     }
 
+    // Check if this is the first user (make them admin)
+    const userCount = await User.countDocuments();
+    const role = userCount === 0 ? "admin" : "user";
+
     // Create customer account
     const user = await User.create({
       name,
       email,
       password,
       phone,
-      role: "user",
-      deliveryAddress: deliveryAddress || {},
+      role: role,
     });
 
     // Send welcome email
@@ -66,13 +68,13 @@ exports.registerCustomer = async (req, res) => {
   }
 };
 
-// Admin Registration (with admin code verification)
+// Admin Registration
 exports.registerAdmin = async (req, res) => {
   try {
     const { name, email, password, phone, adminCode, department, employeeId } =
       req.body;
 
-    // Verify admin code (you can set this in .env file)
+    // Verify admin code
     const validAdminCode =
       process.env.ADMIN_REGISTRATION_CODE || "YESEKELA_ADMIN_2024";
 
@@ -91,16 +93,6 @@ exports.registerAdmin = async (req, res) => {
         .json({ success: false, error: "Email already registered" });
     }
 
-    // Check if employee ID is unique (if provided)
-    if (employeeId) {
-      const existingEmployee = await User.findOne({ employeeId });
-      if (existingEmployee) {
-        return res
-          .status(400)
-          .json({ success: false, error: "Employee ID already exists" });
-      }
-    }
-
     // Create admin account
     const user = await User.create({
       name,
@@ -111,13 +103,6 @@ exports.registerAdmin = async (req, res) => {
       department: department || "management",
       employeeId: employeeId || `ADMIN_${Date.now()}`,
       hireDate: new Date(),
-      adminPermissions: {
-        canManageMenu: true,
-        canManageOrders: true,
-        canManageUsers: true,
-        canViewReports: true,
-        canManageSettings: true,
-      },
       isActive: true,
     });
 
@@ -138,7 +123,7 @@ exports.registerAdmin = async (req, res) => {
   }
 };
 
-// Staff Registration (for restaurant staff)
+// Staff Registration
 exports.registerStaff = async (req, res) => {
   try {
     const {
@@ -171,16 +156,6 @@ exports.registerStaff = async (req, res) => {
         .json({ success: false, error: "Email already registered" });
     }
 
-    // Check if employee ID is unique
-    if (employeeId) {
-      const existingEmployee = await User.findOne({ employeeId });
-      if (existingEmployee) {
-        return res
-          .status(400)
-          .json({ success: false, error: "Employee ID already exists" });
-      }
-    }
-
     // Create staff account
     const user = await User.create({
       name,
@@ -192,13 +167,6 @@ exports.registerStaff = async (req, res) => {
       shift: shift || "morning",
       employeeId: employeeId || `STAFF_${Date.now()}`,
       hireDate: new Date(),
-      adminPermissions: {
-        canManageMenu: false,
-        canManageOrders: department === "kitchen" || department === "service",
-        canManageUsers: false,
-        canViewReports: false,
-        canManageSettings: false,
-      },
       isActive: true,
     });
 

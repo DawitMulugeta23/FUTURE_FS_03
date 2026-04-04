@@ -25,30 +25,31 @@ const EditMenuItem = () => {
   const [imagePreview, setImagePreview] = useState("");
 
   useEffect(() => {
-    fetchMenuItem();
-  }, [id]);
+    const fetchMenuItem = async () => {
+      try {
+        const response = await axios.get(
+          `http://localhost:5000/api/food/${id}`,
+        );
+        const item = response.data.data;
+        setFormData({
+          name: item.name,
+          description: item.description,
+          price: item.price,
+          quantity: item.quantity,
+          category: item.category,
+          isAvailable: item.isAvailable,
+        });
+        setCurrentImage(item.image);
+        setLoading(false);
+      } catch (error) {
+        console.error("Error fetching item:", error);
+        toast.error("Failed to load menu item");
+        navigate("/admin/menu");
+      }
+    };
 
-  const fetchMenuItem = async () => {
-    try {
-      const { data } = await axios.get(`http://localhost:5000/api/food/${id}`);
-      const item = data.data;
-      setFormData({
-        name: item.name,
-        description: item.description,
-        price: item.price,
-        quantity: item.quantity,
-        category: item.category,
-        isAvailable: item.isAvailable,
-      });
-      setCurrentImage(item.image);
-    } catch (error) {
-      console.error("Error fetching item:", error);
-      toast.error("Failed to load menu item");
-      navigate("/admin/menu");
-    } finally {
-      setLoading(false);
-    }
-  };
+    fetchMenuItem();
+  }, [id, navigate]);
 
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
@@ -81,6 +82,7 @@ const EditMenuItem = () => {
     submitData.append("quantity", formData.quantity);
     submitData.append("category", formData.category);
     submitData.append("isAvailable", formData.isAvailable);
+
     if (image) {
       submitData.append("imagePath", image);
     }
@@ -97,18 +99,20 @@ const EditMenuItem = () => {
       navigate("/admin/menu");
     } catch (error) {
       console.error("Error updating item:", error);
-      toast.error(error.response?.data?.error || "Failed to update menu item");
+      const errorMessage =
+        error.response?.data?.error || "Failed to update menu item";
+      toast.error(errorMessage);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDelete = async () => {
-    if (
-      window.confirm(
-        "Are you sure you want to delete this menu item? This action cannot be undone.",
-      )
-    ) {
+    const confirmDelete = window.confirm(
+      "Are you sure you want to delete this menu item? This action cannot be undone.",
+    );
+
+    if (confirmDelete) {
       try {
         const token = localStorage.getItem("token");
         await axios.delete(`http://localhost:5000/api/food/${id}`, {
@@ -131,43 +135,50 @@ const EditMenuItem = () => {
     );
   }
 
+  // Define styles based on dark mode
+  const containerBg = darkMode ? "bg-gray-800" : "bg-white";
+  const borderColor = darkMode ? "border-gray-700" : "border-gray-200";
+  const textColor = darkMode ? "text-white" : "text-gray-800";
+  const textSecondary = darkMode ? "text-gray-400" : "text-gray-500";
+  const labelColor = darkMode ? "text-gray-300" : "text-gray-700";
+  const inputBg = darkMode
+    ? "bg-gray-700 border-gray-600 text-white"
+    : "bg-white border-gray-300 text-gray-900";
+  const selectBg = darkMode
+    ? "bg-gray-700 border-gray-600 text-white"
+    : "bg-white border-gray-300 text-gray-900";
+  const buttonHover = darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100";
+  const deleteButton = darkMode
+    ? "border-red-700 text-red-400 hover:bg-red-900/30"
+    : "border-red-300 text-red-600 hover:bg-red-50";
+
   return (
     <div className="max-w-4xl mx-auto">
-      <div
-        className={`rounded-2xl shadow p-6 transition-colors duration-300 ${darkMode ? "bg-gray-800" : "bg-white"}`}
-      >
+      <div className={`rounded-2xl shadow p-6 ${containerBg}`}>
         {/* Header */}
         <div
-          className={`flex justify-between items-center mb-6 pb-4 border-b ${darkMode ? "border-gray-700" : "border-gray-200"}`}
+          className={`flex justify-between items-center mb-6 pb-4 border-b ${borderColor}`}
         >
           <div>
-            <h2
-              className={`text-2xl font-bold transition-colors duration-300 ${darkMode ? "text-white" : "text-gray-800"}`}
-            >
+            <h2 className={`text-2xl font-bold ${textColor}`}>
               Edit Menu Item
             </h2>
-            <p
-              className={`text-sm mt-1 transition-colors duration-300 ${darkMode ? "text-gray-400" : "text-gray-500"}`}
-            >
+            <p className={`text-sm mt-1 ${textSecondary}`}>
               Update product information
             </p>
           </div>
-          <div className="flex gap-2">
-            <button
-              onClick={() => navigate("/admin/menu")}
-              className={`p-2 rounded-lg transition ${darkMode ? "hover:bg-gray-700 text-gray-400" : "hover:bg-gray-100 text-gray-600"}`}
-            >
-              <X size={20} />
-            </button>
-          </div>
+          <button
+            onClick={() => navigate("/admin/menu")}
+            className={`p-2 rounded-lg transition ${buttonHover} ${textSecondary}`}
+          >
+            <X size={20} />
+          </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Image Section */}
           <div>
-            <label
-              className={`block text-sm font-medium mb-2 transition-colors duration-300 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-            >
+            <label className={`block text-sm font-medium mb-2 ${labelColor}`}>
               Product Image
             </label>
             <div className="flex gap-4 items-start flex-wrap">
@@ -175,7 +186,7 @@ const EditMenuItem = () => {
                 <img
                   src={imagePreview || currentImage}
                   alt={formData.name}
-                  className={`w-32 h-32 object-cover rounded-lg border ${darkMode ? "border-gray-600" : "border-gray-200"}`}
+                  className={`w-32 h-32 object-cover rounded-lg border ${borderColor}`}
                 />
                 {image && (
                   <button
@@ -203,9 +214,7 @@ const EditMenuItem = () => {
                     className="hidden"
                   />
                 </label>
-                <p
-                  className={`text-xs mt-2 ${darkMode ? "text-gray-500" : "text-gray-500"}`}
-                >
+                <p className={`text-xs mt-2 ${textSecondary}`}>
                   Recommended: 800x600px, max 2MB
                 </p>
               </div>
@@ -215,9 +224,7 @@ const EditMenuItem = () => {
           {/* Form Fields */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label
-                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-              >
+              <label className={`block text-sm font-medium mb-1 ${labelColor}`}>
                 Item Name *
               </label>
               <input
@@ -226,21 +233,19 @@ const EditMenuItem = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none transition-colors duration-300 ${darkMode ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500" : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"}`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${inputBg}`}
               />
             </div>
 
             <div>
-              <label
-                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-              >
+              <label className={`block text-sm font-medium mb-1 ${labelColor}`}>
                 Category *
               </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"}`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${selectBg}`}
               >
                 <option value="Coffee">Coffee</option>
                 <option value="Pastry">Pastry</option>
@@ -250,9 +255,7 @@ const EditMenuItem = () => {
             </div>
 
             <div>
-              <label
-                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-              >
+              <label className={`block text-sm font-medium mb-1 ${labelColor}`}>
                 Price (ETB) *
               </label>
               <input
@@ -263,14 +266,12 @@ const EditMenuItem = () => {
                 required
                 min="0"
                 step="0.01"
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${darkMode ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500" : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"}`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${inputBg}`}
               />
             </div>
 
             <div>
-              <label
-                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-              >
+              <label className={`block text-sm font-medium mb-1 ${labelColor}`}>
                 Quantity in Stock *
               </label>
               <input
@@ -280,14 +281,12 @@ const EditMenuItem = () => {
                 onChange={handleChange}
                 required
                 min="0"
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${darkMode ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500" : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"}`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${inputBg}`}
               />
             </div>
 
             <div className="md:col-span-2">
-              <label
-                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-              >
+              <label className={`block text-sm font-medium mb-1 ${labelColor}`}>
                 Description *
               </label>
               <textarea
@@ -296,7 +295,7 @@ const EditMenuItem = () => {
                 onChange={handleChange}
                 required
                 rows={4}
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${darkMode ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500" : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"}`}
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${inputBg}`}
               />
             </div>
 
@@ -309,9 +308,7 @@ const EditMenuItem = () => {
                   onChange={handleChange}
                   className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500 dark:bg-gray-700"
                 />
-                <span
-                  className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-700"}`}
-                >
+                <span className={`text-sm ${labelColor}`}>
                   Item is available for sale
                 </span>
               </label>
@@ -332,9 +329,7 @@ const EditMenuItem = () => {
           )}
 
           {/* Action Buttons */}
-          <div
-            className={`flex gap-3 pt-4 border-t ${darkMode ? "border-gray-700" : "border-gray-200"}`}
-          >
+          <div className={`flex gap-3 pt-4 border-t ${borderColor}`}>
             <button
               type="submit"
               disabled={submitting}
@@ -350,7 +345,7 @@ const EditMenuItem = () => {
             <button
               type="button"
               onClick={handleDelete}
-              className={`px-6 py-2 border rounded-lg transition flex items-center gap-2 ${darkMode ? "border-red-700 text-red-400 hover:bg-red-900/30" : "border-red-300 text-red-600 hover:bg-red-50"}`}
+              className={`px-6 py-2 border rounded-lg transition flex items-center gap-2 ${deleteButton}`}
             >
               <Trash2 size={18} />
               Delete Item
