@@ -1,16 +1,50 @@
+// backend/src/controllers/food.Controller.js
 const Food = require("../models/Food");
 const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
+
+// @desc    Get single food item by ID
+// @route   GET /api/food/:id
+exports.getFoodById = async (req, res) => {
+  try {
+    const food = await Food.findById(req.params.id);
+
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        error: "Food item not found",
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      data: food,
+    });
+  } catch (err) {
+    console.error("Get food by ID error:", err);
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+};
 
 // @desc    Add new food item
 // @route   POST /api/food
 exports.addFood = async (req, res) => {
   try {
-    const { name, description, price, category, isAvailable, quantity } = req.body;
+    const { name, description, price, category, isAvailable, quantity } =
+      req.body;
     let imageUrl = "";
 
     // Validate required fields
-    if (!name || !description || !price || !category || quantity === undefined) {
+    if (
+      !name ||
+      !description ||
+      !price ||
+      !category ||
+      quantity === undefined
+    ) {
       return res.status(400).json({
         success: false,
         error: "Name, description, price, category, and quantity are required",
@@ -103,7 +137,8 @@ exports.getMenu = async (req, res) => {
 // @route   PUT /api/food/:id
 exports.updateFood = async (req, res) => {
   try {
-    const { name, description, price, category, isAvailable, quantity } = req.body;
+    const { name, description, price, category, isAvailable, quantity } =
+      req.body;
 
     if (
       quantity !== undefined &&

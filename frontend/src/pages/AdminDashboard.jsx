@@ -12,6 +12,8 @@ import EmailCampaign from "../components/EmailCampaign";
 import MapComponent from "../components/MapComponent";
 import { useTheme } from "../context/useTheme";
 import FeedbackManager from "../components/Admin/FeedbackManager";
+import EditMenuItem from "../components/Admin/EditMenuItem";
+
 const AdminDashboard = () => {
   const [stats, setStats] = useState({
     totalOrders: 0,
@@ -241,7 +243,7 @@ const AdminDashboard = () => {
             <Route path="/users" element={<UsersManager />} />
             <Route path="/email" element={<EmailCampaign />} />
             <Route path="/feedback" element={<FeedbackManager />} />
-            
+            <Route path="/menu/edit/:id" element={<EditMenuItem />} /> 
             <Route
               path="/location"
               element={

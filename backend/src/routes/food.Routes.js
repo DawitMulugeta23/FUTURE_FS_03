@@ -1,3 +1,4 @@
+// backend/src/routes/food.Routes.js
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -7,8 +8,10 @@ const router = express.Router();
 const {
   addFood,
   getMenu,
+  getFoodById, // Make sure this is imported
   updateFood,
   deleteFood,
+  toggleAvailability,
 } = require("../controllers/food.Controller");
 const { protect, authorize } = require("../middleware/authMiddleware");
 
@@ -36,6 +39,7 @@ const upload = multer({
   },
 });
 
+// Routes
 router
   .route("/")
   .get(getMenu)
@@ -43,7 +47,10 @@ router
 
 router
   .route("/:id")
+  .get(getFoodById) // This line now works because getFoodById is defined
   .put(protect, authorize("admin"), upload.single("imagePath"), updateFood)
   .delete(protect, authorize("admin"), deleteFood);
+
+router.patch("/:id/toggle", protect, authorize("admin"), toggleAvailability);
 
 module.exports = router;

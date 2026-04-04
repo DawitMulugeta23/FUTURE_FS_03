@@ -1,3 +1,4 @@
+// backend/src/models/Order.js
 const mongoose = require("mongoose");
 
 const OrderSchema = new mongoose.Schema(
@@ -18,8 +19,8 @@ const OrderSchema = new mongoose.Schema(
     ],
     totalPrice: { type: Number, required: true, default: 0.0 },
     isPaid: { type: Boolean, required: true, default: false },
-    paidAt: { Date },
-    paymentReference: { type: String }, // Chapa TX_Ref
+    paidAt: { type: Date }, // Fixed: removed { Date } - was causing syntax error
+    paymentReference: { type: String },
     status: {
       type: String,
       required: true,

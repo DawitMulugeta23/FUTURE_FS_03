@@ -13,6 +13,10 @@ import Menu from "./pages/Menu";
 import Orders from "./pages/Orders";
 import OrderSuccess from "./pages/OrderSuccess";
 import Register from "./pages/Register";
+import Contact from "./pages/Contact";
+import MenuItemDetail from "./pages/MenuItemDetail";
+import AdminRegister from "./pages/AdminRegister";
+import StaffRegister from "./pages/StaffRegister";
 
 function App() {
   return (
@@ -21,13 +25,18 @@ function App() {
         <Toaster position="top-center" reverseOrder={false} />
         <Navbar />
         <Routes>
+
+          <Route path="/register/admin" element={<AdminRegister />} />
+          <Route path="/register/staff" element={<StaffRegister />} />
           <Route path="/" element={<Home />} />
           <Route path="/about" element={<About />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/menu" element={<Menu />} />
           <Route path="/cart" element={<Cart />} />
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/order-success" element={<OrderSuccess />} />
+          <Route path="/menu/:id" element={<MenuItemDetail />} />
           <Route
             path="/myorders"
             element={

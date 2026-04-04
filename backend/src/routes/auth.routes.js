@@ -1,11 +1,24 @@
-const express = require('express');
+// backend/src/routes/auth.routes.js
+const express = require("express");
 const router = express.Router();
-const { register, login } = require('../controllers/authController');
+const {
+  registerCustomer,
+  registerAdmin,
+  registerStaff,
+  login,
+} = require("../controllers/authController");
 
-// Route: /api/auth/register
-router.post('/register', register);
+// Customer routes
+router.post("/register", registerCustomer);
+router.post("/register/customer", registerCustomer);
 
-// Route: /api/auth/login
-router.post('/login', login);
+// Admin routes (protected by admin code)
+router.post("/register/admin", registerAdmin);
+
+// Staff routes (protected by manager code)
+router.post("/register/staff", registerStaff);
+
+// Login route (common)
+router.post("/login", login);
 
 module.exports = router;

@@ -1,3 +1,4 @@
+// backend/src/controllers/order.Controller.js
 const Order = require("../models/Order");
 const Food = require("../models/Food");
 const axios = require("axios");
@@ -16,6 +17,14 @@ const getFrontendBaseUrl = () =>
 // @route   POST /api/orders
 exports.createOrder = async (req, res) => {
   try {
+    // PREVENT ADMINS FROM PLACING ORDERS
+    if (req.user.role === 'admin') {
+      return res.status(403).json({
+        success: false,
+        error: "Admins cannot place orders. Please use a customer account for ordering."
+      });
+    }
+    
     const { orderItems, totalPrice } = req.body;
 
     if (!process.env.CHAPA_SECRET_KEY) {

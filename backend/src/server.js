@@ -3,9 +3,8 @@ const dotenv = require("dotenv");
 const path = require("path");
 const cors = require("cors");
 
-// Load env vars before importing routes/controllers
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
-
+const contactRoutes = require("./routes/contactRoutes");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const foodRoutes = require("./routes/food.Routes");
@@ -55,7 +54,7 @@ app.use("/api/food", foodRoutes);
 app.use("/api/orders", orderRoutes);
 app.use("/api/feedback", feedbackRoutes); // Add this line
 app.use("/api/admin", adminRoutes);
-
+app.use("/api/contact", contactRoutes);
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Error:", err.stack);

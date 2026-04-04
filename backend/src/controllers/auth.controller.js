@@ -1,105 +1,246 @@
-const User = require("../models/User.model");
-const { generateToken } = require("../utils/token.service");
-const { sendWelcomeEmail } = require("../utils/email.service");
-const catchAsync = require("../utils/catchAsync");
-const AppError = require("../utils/AppError");
-const { HTTP_STATUS, MESSAGES } = require("../config/constants");
+// backend/src/controllers/authController.js
+const jwt = require("jsonwebtoken");
+const User = require("../models/User");
+const sendEmail = require("../utils/sendEmail");
 
-exports.register = catchAsync(async (req, res, next) => {
-  const { name, email, password, phone } = req.body;
+const sendTokenResponse = (user, statusCode, res) => {
+  const token = jwt.sign(
+    { id: user._id, role: user.role },
+    process.env.JWT_SECRET,
+    {
+      expiresIn: process.env.JWT_EXPIRE || "30d",
+    },
+  );
 
-  const userExists = await User.findOne({ email });
-  if (userExists) {
-    return next(new AppError("User already exists", HTTP_STATUS.CONFLICT));
-  }
-
-  const isFirstUser = (await User.countDocuments()) === 0;
-
-  const user = await User.create({
-    name,
-    email,
-    password,
-    phone,
-    role: isFirstUser ? "admin" : "customer",
-  });
-
-  const token = generateToken(user._id);
-
-  await sendWelcomeEmail(user);
-
-  res.status(HTTP_STATUS.CREATED).json({
+  res.status(statusCode).json({
     success: true,
-    message: MESSAGES.CREATED,
     token,
     user: {
       id: user._id,
       name: user.name,
       email: user.email,
       role: user.role,
+      phone: user.phone,
+      deliveryAddress: user.deliveryAddress,
     },
   });
-});
+};
 
-exports.login = catchAsync(async (req, res, next) => {
-  const { email, password } = req.body;
+// Customer Registration
+exports.registerCustomer = async (req, res) => {
+  try {
+    const { name, email, password, phone, deliveryAddress } = req.body;
 
-  const user = await User.findOne({ email }).select("+password");
-
-  if (!user || !(await user.matchPassword(password))) {
-    return next(
-      new AppError("Invalid email or password", HTTP_STATUS.UNAUTHORIZED),
-    );
-  }
-
-  if (!user.isActive) {
-    return next(new AppError("Account is deactivated", HTTP_STATUS.FORBIDDEN));
-  }
-
-  user.lastLogin = Date.now();
-  await user.save({ validateBeforeSave: false });
-
-  const token = generateToken(user._id);
-
-  res.status(HTTP_STATUS.OK).json({
-    success: true,
-    message: MESSAGES.SUCCESS,
-    token,
-    user: {
-      id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-    },
-  });
-});
-
-exports.getMe = catchAsync(async (req, res, next) => {
-  const user = await User.findById(req.user.id);
-
-  res.status(HTTP_STATUS.OK).json({
-    success: true,
-    data: user,
-  });
-});
-
-exports.updateProfile = catchAsync(async (req, res, next) => {
-  const allowedFields = ["name", "phone", "address"];
-  const updateData = {};
-
-  allowedFields.forEach((field) => {
-    if (req.body[field] !== undefined) {
-      updateData[field] = req.body[field];
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Email already registered" });
     }
-  });
 
-  const user = await User.findByIdAndUpdate(req.user.id, updateData, {
-    new: true,
-    runValidators: true,
-  });
+    // Create customer account
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role: "user",
+      deliveryAddress: deliveryAddress || {},
+    });
 
-  res.status(HTTP_STATUS.OK).json({
-    success: true,
-    message: MESSAGES.UPDATED,
-    data: user,
-  });
-});
+    // Send welcome email
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Welcome to Yesekela Cafe!",
+        message: `Welcome to Yesekela Cafe, ${name}! We are thrilled to have you. Enjoy our fresh brews and delicious meals!`,
+      });
+    } catch (emailError) {
+      console.error("Welcome email failed:", emailError.message);
+    }
+
+    sendTokenResponse(user, 201, res);
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+
+// Admin Registration (with admin code verification)
+exports.registerAdmin = async (req, res) => {
+  try {
+    const { name, email, password, phone, adminCode, department, employeeId } =
+      req.body;
+
+    // Verify admin code (you can set this in .env file)
+    const validAdminCode =
+      process.env.ADMIN_REGISTRATION_CODE || "YESEKELA_ADMIN_2024";
+
+    if (adminCode !== validAdminCode) {
+      return res.status(403).json({
+        success: false,
+        error: "Invalid admin registration code",
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Email already registered" });
+    }
+
+    // Check if employee ID is unique (if provided)
+    if (employeeId) {
+      const existingEmployee = await User.findOne({ employeeId });
+      if (existingEmployee) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Employee ID already exists" });
+      }
+    }
+
+    // Create admin account
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role: "admin",
+      department: department || "management",
+      employeeId: employeeId || `ADMIN_${Date.now()}`,
+      hireDate: new Date(),
+      adminPermissions: {
+        canManageMenu: true,
+        canManageOrders: true,
+        canManageUsers: true,
+        canViewReports: true,
+        canManageSettings: true,
+      },
+      isActive: true,
+    });
+
+    // Send welcome email to admin
+    try {
+      await sendEmail({
+        email: user.email,
+        subject: "Welcome to Yesekela Cafe Admin Team!",
+        message: `Welcome ${name}! You have been registered as an administrator. You can now manage the cafe operations.`,
+      });
+    } catch (emailError) {
+      console.error("Welcome email failed:", emailError.message);
+    }
+
+    sendTokenResponse(user, 201, res);
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+
+// Staff Registration (for restaurant staff)
+exports.registerStaff = async (req, res) => {
+  try {
+    const {
+      name,
+      email,
+      password,
+      phone,
+      department,
+      shift,
+      employeeId,
+      managerCode,
+    } = req.body;
+
+    // Verify manager code
+    const validManagerCode =
+      process.env.MANAGER_REGISTRATION_CODE || "YESEKELA_STAFF_2024";
+
+    if (managerCode !== validManagerCode) {
+      return res.status(403).json({
+        success: false,
+        error: "Invalid staff registration code. Please contact manager.",
+      });
+    }
+
+    // Check if user exists
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res
+        .status(400)
+        .json({ success: false, error: "Email already registered" });
+    }
+
+    // Check if employee ID is unique
+    if (employeeId) {
+      const existingEmployee = await User.findOne({ employeeId });
+      if (existingEmployee) {
+        return res
+          .status(400)
+          .json({ success: false, error: "Employee ID already exists" });
+      }
+    }
+
+    // Create staff account
+    const user = await User.create({
+      name,
+      email,
+      password,
+      phone,
+      role: "staff",
+      department: department || "service",
+      shift: shift || "morning",
+      employeeId: employeeId || `STAFF_${Date.now()}`,
+      hireDate: new Date(),
+      adminPermissions: {
+        canManageMenu: false,
+        canManageOrders: department === "kitchen" || department === "service",
+        canManageUsers: false,
+        canViewReports: false,
+        canManageSettings: false,
+      },
+      isActive: true,
+    });
+
+    sendTokenResponse(user, 201, res);
+  } catch (err) {
+    res.status(400).json({ success: false, error: err.message });
+  }
+};
+
+// Login (common for all roles)
+exports.login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    const user = await User.findOne({ email }).select("+password");
+
+    if (!user) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials" });
+    }
+
+    const isMatch = await user.matchPassword(password);
+    if (!isMatch) {
+      return res
+        .status(401)
+        .json({ success: false, error: "Invalid credentials" });
+    }
+
+    if (!user.isActive) {
+      return res.status(403).json({
+        success: false,
+        error: "Account is deactivated. Contact admin.",
+      });
+    }
+
+    // Update last login
+    user.lastLogin = Date.now();
+    await user.save({ validateBeforeSave: false });
+
+    sendTokenResponse(user, 200, res);
+  } catch (err) {
+    res.status(500).json({ success: false, error: err.message });
+  }
+};

@@ -2,11 +2,13 @@ import axios from "axios";
 import { Edit, Save, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 
 const MenuManager = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
+  const navigate = useNavigate();
   const [currentItem, setCurrentItem] = useState({
     name: "",
     price: "",
@@ -86,19 +88,6 @@ const MenuManager = () => {
       console.error("Error saving menu item", err);
       toast.error(err.response?.data?.error || "Failed to save menu item");
     }
-  };
-
-  const handleEdit = (item) => {
-    setIsEditing(true);
-    setEditingId(item._id);
-    setCurrentItem({
-      name: item.name,
-      price: item.price,
-      quantity: item.quantity ?? 1,
-      description: item.description,
-      category: item.category,
-      image: null,
-    });
   };
 
   const handleDelete = async (id) => {
@@ -311,7 +300,7 @@ const MenuManager = () => {
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <button
-                        onClick={() => handleEdit(item)}
+                        onClick={() => navigate(`/admin/menu/edit/${item._id}`)}
                         className="p-1 text-blue-600 hover:bg-blue-50 rounded transition"
                         title="Edit"
                       >
@@ -331,6 +320,12 @@ const MenuManager = () => {
             </tbody>
           </table>
         </div>
+
+        {menuItems.length === 0 && (
+          <div className="text-center py-8 text-gray-500">
+            No menu items found. Click "Add New Menu Item" to get started.
+          </div>
+        )}
       </div>
     </div>
   );
