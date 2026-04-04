@@ -8,6 +8,7 @@ import EditMenuItem from "../components/Admin/EditMenuItem";
 import FeedbackManager from "../components/Admin/FeedbackManager";
 import MenuManager from "../components/Admin/MenuManager";
 import OrdersManager from "../components/Admin/OrdersManager";
+import StockNotification from "../components/Admin/StockNotification";
 import UsersManager from "../components/Admin/UserManager";
 import AdminSetting from "../components/AdminSetting";
 import AdminSidebar from "../components/AdminSidebar";
@@ -125,9 +126,11 @@ const AdminDashboard = () => {
       <AdminSidebar />
 
       <div className="flex-1 ml-64">
+        {/* Header with Notification Icon */}
+        
+
         <div className="p-8">
           <Routes>
-            {/* Dashboard Home - exact path */}
             <Route
               path="/"
               element={
@@ -152,7 +155,6 @@ const AdminDashboard = () => {
                     darkMode={darkMode}
                   />
 
-                  {/* Analytics Section */}
                   <div className="grid lg:grid-cols-2 gap-6 mt-8">
                     <div
                       className={`rounded-2xl shadow p-6 transition-colors duration-300 ${darkMode ? "bg-gray-800" : "bg-white"}`}
@@ -265,23 +267,12 @@ const AdminDashboard = () => {
               }
             />
 
-            {/* Menu Manager */}
             <Route path="menu" element={<MenuManager />} />
             <Route path="menu/edit/:id" element={<EditMenuItem />} />
-
-            {/* Orders Manager */}
             <Route path="orders" element={<OrdersManager />} />
-
-            {/* Users Manager */}
             <Route path="users" element={<UsersManager />} />
-
-            {/* Email Campaign */}
             <Route path="email" element={<EmailCampaign />} />
-
-            {/* Feedback Manager */}
             <Route path="feedback" element={<FeedbackManager />} />
-
-            {/* Location */}
             <Route
               path="location"
               element={
@@ -333,8 +324,6 @@ const AdminDashboard = () => {
                 </div>
               }
             />
-
-            {/* Settings */}
             <Route path="settings" element={<AdminSetting />} />
           </Routes>
         </div>

@@ -1,5 +1,6 @@
 // frontend/src/components/AdminSidebar.jsx
 import {
+  Bell,
   LayoutDashboard,
   LogOut,
   Mail,
@@ -12,11 +13,14 @@ import {
   Users,
   Utensils,
 } from "lucide-react";
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useTheme } from "../context/useTheme";
+import StockNotificationDropdown from "./Admin/StockNotificationDropdown";
 
 const AdminSidebar = () => {
   const { darkMode, toggleDarkMode } = useTheme();
+  const [showStockDropdown, setShowStockDropdown] = useState(false);
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -37,12 +41,12 @@ const AdminSidebar = () => {
 
   return (
     <div
-      className={`h-screen w-64 fixed left-0 top-0 overflow-y-auto transition-colors duration-300 ${
+      className={`h-screen w-64 fixed left-0 top-0 overflow-y-auto transition-colors duration-300 flex flex-col ${
         darkMode ? "bg-gray-900 text-white" : "bg-amber-900 text-white"
       }`}
     >
-      <div className="p-6">
-        {/* Logo */}
+      <div className="p-6 flex-1">
+        {/* Logo Section */}
         <div className="text-center mb-8">
           <h2
             className={`text-2xl font-bold italic transition-colors duration-300 ${
@@ -84,13 +88,45 @@ const AdminSidebar = () => {
             </NavLink>
           ))}
         </nav>
+      </div>
 
-        {/* Divider */}
-        <div
-          className={`my-6 h-px transition-colors duration-300 ${
-            darkMode ? "bg-gray-700" : "bg-amber-800"
-          }`}
-        />
+      {/* Bottom Section - Dark Mode, Stock Alerts, Logout */}
+      <div className="p-6 border-t border-amber-800 dark:border-gray-700">
+        {/* Stock Alerts Dropdown Button - Not a NavLink */}
+        <div className="relative">
+          <button
+            onClick={() => setShowStockDropdown(!showStockDropdown)}
+            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 mb-2 ${
+              darkMode
+                ? "bg-gray-800 text-gray-300 hover:bg-gray-700 hover:text-white"
+                : "bg-amber-800 text-amber-100 hover:bg-amber-700 hover:text-white"
+            }`}
+          >
+            <Bell size={20} />
+            <span className="text-sm font-medium">Stock Alerts</span>
+          </button>
+
+          {/* Dropdown Menu */}
+          {showStockDropdown && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowStockDropdown(false)}
+              />
+              <div
+                className={`absolute bottom-full left-0 mb-2 w-64 rounded-xl shadow-xl z-50 overflow-hidden border ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-700"
+                    : "bg-white border-gray-200"
+                }`}
+              >
+                <StockNotificationDropdown
+                  onClose={() => setShowStockDropdown(false)}
+                />
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Dark Mode Toggle */}
         <button
@@ -122,7 +158,7 @@ const AdminSidebar = () => {
 
         {/* Version Info */}
         <div
-          className={`mt-8 pt-4 text-center text-xs transition-colors duration-300 ${
+          className={`mt-4 pt-4 text-center text-xs transition-colors duration-300 ${
             darkMode ? "text-gray-600" : "text-amber-700"
           }`}
         >

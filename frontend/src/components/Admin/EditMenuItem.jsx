@@ -1,6 +1,12 @@
-// frontend/src/components/Admin/EditMenuItem.jsx
 import axios from "axios";
-import { AlertCircle, Save, Trash2, Upload, X } from "lucide-react";
+import {
+  AlertCircle,
+  Save,
+  Trash2,
+  TrendingDown,
+  Upload,
+  X,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
@@ -99,9 +105,7 @@ const EditMenuItem = () => {
       navigate("/admin/menu");
     } catch (error) {
       console.error("Error updating item:", error);
-      const errorMessage =
-        error.response?.data?.error || "Failed to update menu item";
-      toast.error(errorMessage);
+      toast.error(error.response?.data?.error || "Failed to update menu item");
     } finally {
       setSubmitting(false);
     }
@@ -135,7 +139,6 @@ const EditMenuItem = () => {
     );
   }
 
-  // Define styles based on dark mode
   const containerBg = darkMode ? "bg-gray-800" : "bg-white";
   const borderColor = darkMode ? "border-gray-700" : "border-gray-200";
   const textColor = darkMode ? "text-white" : "text-gray-800";
@@ -147,15 +150,10 @@ const EditMenuItem = () => {
   const selectBg = darkMode
     ? "bg-gray-700 border-gray-600 text-white"
     : "bg-white border-gray-300 text-gray-900";
-  const buttonHover = darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100";
-  const deleteButton = darkMode
-    ? "border-red-700 text-red-400 hover:bg-red-900/30"
-    : "border-red-300 text-red-600 hover:bg-red-50";
 
   return (
     <div className="max-w-4xl mx-auto">
       <div className={`rounded-2xl shadow p-6 ${containerBg}`}>
-        {/* Header */}
         <div
           className={`flex justify-between items-center mb-6 pb-4 border-b ${borderColor}`}
         >
@@ -169,14 +167,13 @@ const EditMenuItem = () => {
           </div>
           <button
             onClick={() => navigate("/admin/menu")}
-            className={`p-2 rounded-lg transition ${buttonHover} ${textSecondary}`}
+            className={`p-2 rounded-lg transition ${textSecondary}`}
           >
             <X size={20} />
           </button>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Image Section */}
           <div>
             <label className={`block text-sm font-medium mb-2 ${labelColor}`}>
               Product Image
@@ -203,7 +200,11 @@ const EditMenuItem = () => {
               </div>
               <div className="flex-1">
                 <label
-                  className={`flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer transition w-fit ${darkMode ? "border-gray-600 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
+                  className={`flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer transition w-fit ${
+                    darkMode
+                      ? "border-gray-600 text-gray-300 hover:bg-gray-700"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
                 >
                   <Upload size={18} />
                   <span className="text-sm">Change Image</span>
@@ -221,7 +222,6 @@ const EditMenuItem = () => {
             </div>
           </div>
 
-          {/* Form Fields */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label className={`block text-sm font-medium mb-1 ${labelColor}`}>
@@ -315,20 +315,32 @@ const EditMenuItem = () => {
             </div>
           </div>
 
-          {/* Warning for low stock */}
           {formData.quantity > 0 && formData.quantity <= 5 && (
             <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
-              <AlertCircle
+              <TrendingDown
                 size={18}
                 className="text-yellow-600 dark:text-yellow-500"
               />
               <p className="text-sm text-yellow-700 dark:text-yellow-400">
-                Low stock alert! Only {formData.quantity} items remaining.
+                ⚠️ Low stock alert! Only {formData.quantity} items remaining.
+                {formData.quantity <= 2 && " Consider restocking soon!"}
               </p>
             </div>
           )}
 
-          {/* Action Buttons */}
+          {formData.quantity === 0 && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800">
+              <AlertCircle
+                size={18}
+                className="text-red-600 dark:text-red-500"
+              />
+              <p className="text-sm text-red-700 dark:text-red-400">
+                ❌ This item is out of stock. Customers cannot see or order this
+                item until you add quantity.
+              </p>
+            </div>
+          )}
+
           <div className={`flex gap-3 pt-4 border-t ${borderColor}`}>
             <button
               type="submit"
@@ -345,7 +357,11 @@ const EditMenuItem = () => {
             <button
               type="button"
               onClick={handleDelete}
-              className={`px-6 py-2 border rounded-lg transition flex items-center gap-2 ${deleteButton}`}
+              className={`px-6 py-2 border rounded-lg transition flex items-center gap-2 ${
+                darkMode
+                  ? "border-red-700 text-red-400 hover:bg-red-900/30"
+                  : "border-red-300 text-red-600 hover:bg-red-50"
+              }`}
             >
               <Trash2 size={18} />
               Delete Item

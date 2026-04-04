@@ -1,9 +1,12 @@
+// frontend/src/components/Admin/FeedbackManager.jsx
 import axios from "axios";
 import { CheckCircle, Mail, Star, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useTheme } from "../../context/useTheme";
 
 const FeedbackManager = () => {
+  const { darkMode } = useTheme();
   const [feedback, setFeedback] = useState([]);
   const [stats, setStats] = useState({
     averageRating: 0,
@@ -81,9 +84,11 @@ const FeedbackManager = () => {
 
   const getStatusBadge = (status) => {
     const colors = {
-      pending: "bg-yellow-100 text-yellow-800",
-      read: "bg-blue-100 text-blue-800",
-      replied: "bg-green-100 text-green-800",
+      pending:
+        "bg-yellow-100 text-yellow-800 dark:bg-yellow-900/50 dark:text-yellow-300",
+      read: "bg-blue-100 text-blue-800 dark:bg-blue-900/50 dark:text-blue-300",
+      replied:
+        "bg-green-100 text-green-800 dark:bg-green-900/50 dark:text-green-300",
     };
     return (
       <span
@@ -97,7 +102,7 @@ const FeedbackManager = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 dark:border-amber-500"></div>
       </div>
     );
   }
@@ -106,10 +111,18 @@ const FeedbackManager = () => {
     <div className="space-y-6">
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl shadow p-4">
-          <p className="text-sm text-gray-500">Average Rating</p>
+        <div
+          className={`rounded-2xl shadow p-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+        >
+          <p
+            className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}
+          >
+            Average Rating
+          </p>
           <div className="flex items-center gap-2 mt-1">
-            <span className="text-2xl font-bold">
+            <span
+              className={`text-2xl font-bold ${darkMode ? "text-white" : "text-gray-800"}`}
+            >
               {stats.averageRating.toFixed(1)}
             </span>
             <div className="flex">
@@ -120,7 +133,7 @@ const FeedbackManager = () => {
                   className={`${
                     star <= Math.round(stats.averageRating)
                       ? "fill-yellow-400 text-yellow-400"
-                      : "text-gray-300"
+                      : "text-gray-300 dark:text-gray-600"
                   }`}
                 />
               ))}
@@ -128,21 +141,43 @@ const FeedbackManager = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-2xl shadow p-4">
-          <p className="text-sm text-gray-500">Total Feedback</p>
-          <p className="text-2xl font-bold">{stats.totalFeedback}</p>
+        <div
+          className={`rounded-2xl shadow p-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+        >
+          <p
+            className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}
+          >
+            Total Feedback
+          </p>
+          <p
+            className={`text-2xl font-bold ${darkMode ? "text-white" : "text-gray-800"}`}
+          >
+            {stats.totalFeedback}
+          </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow p-4">
-          <p className="text-sm text-gray-500">Pending Reply</p>
-          <p className="text-2xl font-bold text-yellow-600">
+        <div
+          className={`rounded-2xl shadow p-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+        >
+          <p
+            className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}
+          >
+            Pending Reply
+          </p>
+          <p className="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
             {stats.pendingCount}
           </p>
         </div>
 
-        <div className="bg-white rounded-2xl shadow p-4">
-          <p className="text-sm text-gray-500">Replied</p>
-          <p className="text-2xl font-bold text-green-600">
+        <div
+          className={`rounded-2xl shadow p-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+        >
+          <p
+            className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}
+          >
+            Replied
+          </p>
+          <p className="text-2xl font-bold text-green-600 dark:text-green-400">
             {stats.repliedCount}
           </p>
         </div>
@@ -157,7 +192,9 @@ const FeedbackManager = () => {
             className={`px-4 py-2 rounded-lg font-medium transition ${
               filter === status
                 ? "bg-amber-600 text-white"
-                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                : darkMode
+                  ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
             }`}
           >
             {status.charAt(0).toUpperCase() + status.slice(1)}
@@ -168,7 +205,10 @@ const FeedbackManager = () => {
       {/* Feedback List */}
       <div className="space-y-4">
         {feedback.map((item) => (
-          <div key={item._id} className="bg-white rounded-2xl shadow p-6">
+          <div
+            key={item._id}
+            className={`rounded-2xl shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+          >
             <div className="flex justify-between items-start mb-3">
               <div>
                 <div className="flex items-center gap-3 mb-2">
@@ -180,16 +220,26 @@ const FeedbackManager = () => {
                         className={`${
                           star <= item.rating
                             ? "fill-yellow-400 text-yellow-400"
-                            : "text-gray-300"
+                            : "text-gray-300 dark:text-gray-600"
                         }`}
                       />
                     ))}
                   </div>
                   {getStatusBadge(item.status)}
                 </div>
-                <h4 className="font-bold text-lg">{item.title}</h4>
-                <p className="text-gray-600 mt-2">{item.message}</p>
-                <div className="mt-3 text-sm text-gray-500">
+                <h4
+                  className={`font-bold text-lg ${darkMode ? "text-white" : "text-gray-800"}`}
+                >
+                  {item.title}
+                </h4>
+                <p
+                  className={`mt-2 ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+                >
+                  {item.message}
+                </p>
+                <div
+                  className={`mt-3 text-sm ${darkMode ? "text-gray-500" : "text-gray-500"}`}
+                >
                   <p>
                     From: {item.userName} ({item.userEmail})
                   </p>
@@ -204,7 +254,7 @@ const FeedbackManager = () => {
                       setSelectedFeedback(item);
                       setShowReplyModal(true);
                     }}
-                    className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition"
+                    className="p-2 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded-lg transition"
                     title="Reply"
                   >
                     <Mail size={18} />
@@ -212,7 +262,7 @@ const FeedbackManager = () => {
                 )}
                 <button
                   onClick={() => handleDelete(item._id)}
-                  className="p-2 text-red-600 hover:bg-red-50 rounded-lg transition"
+                  className="p-2 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 rounded-lg transition"
                   title="Delete"
                 >
                   <Trash2 size={18} />
@@ -221,12 +271,18 @@ const FeedbackManager = () => {
             </div>
 
             {item.adminReply && (
-              <div className="mt-4 p-3 bg-green-50 rounded-lg border-l-4 border-green-500">
-                <p className="text-sm font-medium text-green-800 mb-1 flex items-center gap-2">
+              <div className="mt-4 p-3 bg-green-50 dark:bg-green-900/30 rounded-lg border-l-4 border-green-500">
+                <p className="text-sm font-medium text-green-800 dark:text-green-400 mb-1 flex items-center gap-2">
                   <CheckCircle size={14} /> Admin Response:
                 </p>
-                <p className="text-gray-700">{item.adminReply.message}</p>
-                <p className="text-xs text-gray-500 mt-1">
+                <p
+                  className={`${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                >
+                  {item.adminReply.message}
+                </p>
+                <p
+                  className={`text-xs mt-1 ${darkMode ? "text-gray-500" : "text-gray-500"}`}
+                >
                   Replied on{" "}
                   {new Date(item.adminReply.repliedAt).toLocaleString()}
                 </p>
@@ -236,8 +292,12 @@ const FeedbackManager = () => {
         ))}
 
         {feedback.length === 0 && (
-          <div className="text-center py-12 bg-white rounded-2xl shadow">
-            <p className="text-gray-500">No feedback found</p>
+          <div
+            className={`text-center py-12 rounded-2xl shadow ${darkMode ? "bg-gray-800" : "bg-white"}`}
+          >
+            <p className={darkMode ? "text-gray-400" : "text-gray-500"}>
+              No feedback found
+            </p>
           </div>
         )}
       </div>
@@ -245,13 +305,27 @@ const FeedbackManager = () => {
       {/* Reply Modal */}
       {showReplyModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6">
-            <h3 className="text-xl font-bold mb-4">Reply to Feedback</h3>
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <p className="text-sm text-gray-600 font-medium">
+          <div
+            className={`rounded-2xl max-w-lg w-full p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+          >
+            <h3
+              className={`text-xl font-bold mb-4 ${darkMode ? "text-white" : "text-gray-800"}`}
+            >
+              Reply to Feedback
+            </h3>
+            <div
+              className={`mb-4 p-3 rounded-lg ${darkMode ? "bg-gray-700" : "bg-gray-50"}`}
+            >
+              <p
+                className={`text-sm font-medium ${darkMode ? "text-gray-300" : "text-gray-600"}`}
+              >
                 From: {selectedFeedback?.userName}
               </p>
-              <p className="text-gray-800 mt-1">{selectedFeedback?.message}</p>
+              <p
+                className={`mt-1 ${darkMode ? "text-gray-400" : "text-gray-800"}`}
+              >
+                {selectedFeedback?.message}
+              </p>
             </div>
             <form onSubmit={handleReply}>
               <textarea
@@ -259,7 +333,11 @@ const FeedbackManager = () => {
                 onChange={(e) => setReplyMessage(e.target.value)}
                 rows={4}
                 placeholder="Type your reply here..."
-                className="w-full p-2 border rounded-lg mb-4"
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none mb-4 ${
+                  darkMode
+                    ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                    : "bg-white border-gray-300 text-gray-900"
+                }`}
                 required
               />
               <div className="flex gap-3">
@@ -272,7 +350,11 @@ const FeedbackManager = () => {
                 <button
                   type="button"
                   onClick={() => setShowReplyModal(false)}
-                  className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition"
+                  className={`flex-1 border py-2 rounded-lg transition ${
+                    darkMode
+                      ? "border-gray-600 text-gray-300 hover:bg-gray-700"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
                 >
                   Cancel
                 </button>

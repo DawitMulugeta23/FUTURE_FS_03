@@ -1,9 +1,12 @@
+// frontend/src/components/Admin/UserManager.jsx
 import axios from "axios";
 import { Mail, Trash2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useTheme } from "../../context/useTheme";
 
 const UsersManager = () => {
+  const { darkMode } = useTheme();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showEmailModal, setShowEmailModal] = useState(false);
@@ -89,53 +92,88 @@ const UsersManager = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 dark:border-amber-500"></div>
       </div>
     );
   }
 
   return (
-    <div className="bg-white rounded-2xl shadow p-6">
-      <h3 className="text-2xl font-bold mb-6 text-gray-800">User Management</h3>
+    <div
+      className={`rounded-2xl shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+    >
+      <h3
+        className={`text-2xl font-bold mb-6 ${darkMode ? "text-white" : "text-gray-800"}`}
+      >
+        User Management
+      </h3>
 
       <div className="overflow-x-auto">
         <table className="w-full">
-          <thead className="bg-gray-50">
+          <thead className={darkMode ? "bg-gray-700" : "bg-gray-50"}>
             <tr>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">
+              <th
+                className={`px-4 py-3 text-left text-sm font-semibold ${darkMode ? "text-gray-300" : "text-gray-600"}`}
+              >
                 Name
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">
+              <th
+                className={`px-4 py-3 text-left text-sm font-semibold ${darkMode ? "text-gray-300" : "text-gray-600"}`}
+              >
                 Email
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">
+              <th
+                className={`px-4 py-3 text-left text-sm font-semibold ${darkMode ? "text-gray-300" : "text-gray-600"}`}
+              >
                 Role
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">
+              <th
+                className={`px-4 py-3 text-left text-sm font-semibold ${darkMode ? "text-gray-300" : "text-gray-600"}`}
+              >
                 Joined
               </th>
-              <th className="px-4 py-3 text-left text-sm font-semibold text-gray-600">
+              <th
+                className={`px-4 py-3 text-left text-sm font-semibold ${darkMode ? "text-gray-300" : "text-gray-600"}`}
+              >
                 Actions
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-200">
+          <tbody
+            className={`divide-y ${darkMode ? "divide-gray-700" : "divide-gray-200"}`}
+          >
             {users.map((user) => (
-              <tr key={user._id} className="hover:bg-gray-50 transition">
-                <td className="px-4 py-3 font-medium">{user.name}</td>
-                <td className="px-4 py-3 text-gray-600">{user.email}</td>
+              <tr
+                key={user._id}
+                className={`transition ${darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"}`}
+              >
+                <td
+                  className={`px-4 py-3 font-medium ${darkMode ? "text-white" : "text-gray-800"}`}
+                >
+                  {user.name}
+                </td>
+                <td
+                  className={`px-4 py-3 ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+                >
+                  {user.email}
+                </td>
                 <td className="px-4 py-3">
                   <select
                     value={user.role}
                     onChange={(e) => updateUserRole(user._id, e.target.value)}
-                    className="px-2 py-1 border rounded text-sm bg-white"
+                    className={`px-2 py-1 border rounded text-sm ${
+                      darkMode
+                        ? "bg-gray-700 border-gray-600 text-white"
+                        : "bg-white border-gray-300 text-gray-900"
+                    }`}
                   >
                     <option value="user">User</option>
                     <option value="staff">Staff</option>
                     <option value="admin">Admin</option>
                   </select>
                 </td>
-                <td className="px-4 py-3 text-gray-600">
+                <td
+                  className={`px-4 py-3 ${darkMode ? "text-gray-400" : "text-gray-600"}`}
+                >
                   {new Date(user.createdAt).toLocaleDateString()}
                 </td>
                 <td className="px-4 py-3">
@@ -145,7 +183,7 @@ const UsersManager = () => {
                         setSelectedUser(user);
                         setShowEmailModal(true);
                       }}
-                      className="p-1 text-blue-600 hover:bg-blue-50 rounded transition"
+                      className="p-1 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded transition"
                       title="Send Email"
                     >
                       <Mail size={18} />
@@ -153,7 +191,7 @@ const UsersManager = () => {
                     {user.role !== "admin" && (
                       <button
                         onClick={() => deleteUser(user._id)}
-                        className="p-1 text-red-600 hover:bg-red-50 rounded transition"
+                        className="p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 rounded transition"
                         title="Delete User"
                       >
                         <Trash2 size={18} />
@@ -170,13 +208,19 @@ const UsersManager = () => {
       {/* Email Modal */}
       {showEmailModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-          <div className="bg-white rounded-2xl p-6 max-w-md w-full mx-4">
-            <h3 className="text-xl font-bold mb-4">
+          <div
+            className={`rounded-2xl p-6 max-w-md w-full mx-4 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+          >
+            <h3
+              className={`text-xl font-bold mb-4 ${darkMode ? "text-white" : "text-gray-800"}`}
+            >
               Send Email to {selectedUser?.name}
             </h3>
             <form onSubmit={sendEmail}>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">
+                <label
+                  className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                >
                   Subject
                 </label>
                 <input
@@ -185,12 +229,18 @@ const UsersManager = () => {
                   onChange={(e) =>
                     setEmailData({ ...emailData, subject: e.target.value })
                   }
-                  className="w-full p-2 border rounded-lg"
+                  className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                    darkMode
+                      ? "bg-gray-700 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  }`}
                   required
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm font-medium mb-1">
+                <label
+                  className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                >
                   Message
                 </label>
                 <textarea
@@ -199,7 +249,11 @@ const UsersManager = () => {
                   onChange={(e) =>
                     setEmailData({ ...emailData, message: e.target.value })
                   }
-                  className="w-full p-2 border rounded-lg"
+                  className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                    darkMode
+                      ? "bg-gray-700 border-gray-600 text-white"
+                      : "bg-white border-gray-300 text-gray-900"
+                  }`}
                   required
                 />
               </div>
@@ -213,7 +267,11 @@ const UsersManager = () => {
                 <button
                   type="button"
                   onClick={() => setShowEmailModal(false)}
-                  className="flex-1 border border-gray-300 py-2 rounded-lg hover:bg-gray-50 transition"
+                  className={`flex-1 border py-2 rounded-lg transition ${
+                    darkMode
+                      ? "border-gray-600 text-gray-300 hover:bg-gray-700"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
                 >
                   Cancel
                 </button>

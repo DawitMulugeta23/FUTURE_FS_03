@@ -1,9 +1,12 @@
+// frontend/src/components/AdminSetting.jsx
 import axios from "axios";
 import { CheckCircle, Save, Settings } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { useTheme } from "../context/useTheme";
 
 const AdminSetting = () => {
+  const { darkMode } = useTheme();
   const [settings, setSettings] = useState({
     cafeName: "Yesekela Café",
     email: "info@yesekelacafe.com",
@@ -59,15 +62,22 @@ const AdminSetting = () => {
   };
 
   return (
-    <div className="bg-white rounded-2xl shadow p-6">
-      <h3 className="text-2xl font-bold mb-6 text-gray-800 flex items-center gap-2">
-        <Settings className="text-amber-600" /> Cafe Settings
+    <div
+      className={`rounded-2xl shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+    >
+      <h3
+        className={`text-2xl font-bold mb-6 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-800"}`}
+      >
+        <Settings className="text-amber-600 dark:text-amber-400" /> Cafe
+        Settings
       </h3>
 
       <form onSubmit={handleSave} className="space-y-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+            >
               Cafe Name
             </label>
             <input
@@ -76,12 +86,18 @@ const AdminSetting = () => {
               onChange={(e) =>
                 setSettings({ ...settings, cafeName: e.target.value })
               }
-              className="w-full p-2 border rounded-lg"
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+            >
               Email
             </label>
             <input
@@ -90,12 +106,18 @@ const AdminSetting = () => {
               onChange={(e) =>
                 setSettings({ ...settings, email: e.target.value })
               }
-              className="w-full p-2 border rounded-lg"
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+            >
               Phone
             </label>
             <input
@@ -104,12 +126,18 @@ const AdminSetting = () => {
               onChange={(e) =>
                 setSettings({ ...settings, phone: e.target.value })
               }
-              className="w-full p-2 border rounded-lg"
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+            >
               Opening Hours
             </label>
             <input
@@ -118,12 +146,18 @@ const AdminSetting = () => {
               onChange={(e) =>
                 setSettings({ ...settings, openingHours: e.target.value })
               }
-              className="w-full p-2 border rounded-lg"
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
             />
           </div>
 
           <div className="md:col-span-2">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+            >
               Address
             </label>
             <input
@@ -132,12 +166,18 @@ const AdminSetting = () => {
               onChange={(e) =>
                 setSettings({ ...settings, address: e.target.value })
               }
-              className="w-full p-2 border rounded-lg"
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+            >
               City
             </label>
             <input
@@ -146,12 +186,18 @@ const AdminSetting = () => {
               onChange={(e) =>
                 setSettings({ ...settings, city: e.target.value })
               }
-              className="w-full p-2 border rounded-lg"
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+            >
               Delivery Fee (ETB)
             </label>
             <input
@@ -163,12 +209,18 @@ const AdminSetting = () => {
                   deliveryFee: parseFloat(e.target.value),
                 })
               }
-              className="w-full p-2 border rounded-lg"
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+            >
               Minimum Order (ETB)
             </label>
             <input
@@ -180,12 +232,18 @@ const AdminSetting = () => {
                   minimumOrder: parseFloat(e.target.value),
                 })
               }
-              className="w-full p-2 border rounded-lg"
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label
+              className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+            >
               Tax Rate (%)
             </label>
             <input
@@ -198,7 +256,11 @@ const AdminSetting = () => {
                   taxRate: parseFloat(e.target.value),
                 })
               }
-              className="w-full p-2 border rounded-lg"
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                darkMode
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300 text-gray-900"
+              }`}
             />
           </div>
         </div>

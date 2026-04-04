@@ -1,4 +1,3 @@
-// backend/src/controllers/food.Controller.js
 const Food = require("../models/Food");
 const cloudinary = require("../config/cloudinary");
 const fs = require("fs");
@@ -37,7 +36,6 @@ exports.addFood = async (req, res) => {
       req.body;
     let imageUrl = "";
 
-    // Validate required fields
     if (
       !name ||
       !description ||
@@ -59,7 +57,6 @@ exports.addFood = async (req, res) => {
       });
     }
 
-    // Handle image upload with better error handling
     if (req.file) {
       try {
         const result = await cloudinary.uploader.upload(req.file.path, {
@@ -79,7 +76,6 @@ exports.addFood = async (req, res) => {
         });
       }
     } else if (req.body.imageUrl) {
-      // Handle image URL if provided
       imageUrl = req.body.imageUrl;
     } else {
       return res.status(400).json({
@@ -109,12 +105,15 @@ exports.addFood = async (req, res) => {
   }
 };
 
-// @desc    Get all food items with filtering
+// @desc    Get menu for customers (excludes zero quantity items)
 // @route   GET /api/food
 exports.getMenu = async (req, res) => {
   try {
     const { category, search, isAvailable } = req.query;
     let filter = {};
+
+    // For customers, exclude items with quantity 0
+    filter.quantity = { $gt: 0 };
 
     if (category) filter.category = category;
     if (isAvailable !== undefined) filter.isAvailable = isAvailable === "true";
@@ -129,6 +128,65 @@ exports.getMenu = async (req, res) => {
     res.status(200).json({ success: true, data: menu });
   } catch (err) {
     console.error("Get menu error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// @desc    Get all menu items for admin (including zero quantity)
+// @route   GET /api/food/admin/all
+exports.getAllMenuForAdmin = async (req, res) => {
+  try {
+    const menu = await Food.find().sort({ category: 1, name: 1 });
+
+    const inStock = menu.filter((item) => item.quantity > 0);
+    const outOfStock = menu.filter((item) => item.quantity === 0);
+    const lowStock = menu.filter(
+      (item) => item.quantity > 0 && item.quantity <= 5,
+    );
+
+    res.status(200).json({
+      success: true,
+      data: {
+        all: menu,
+        inStock,
+        outOfStock,
+        lowStock,
+        totalItems: menu.length,
+        outOfStockCount: outOfStock.length,
+        lowStockCount: lowStock.length,
+      },
+    });
+  } catch (err) {
+    console.error("Get all menu for admin error:", err);
+    res.status(500).json({ success: false, error: err.message });
+  }
+};
+
+// @desc    Get low stock items for notification
+// @route   GET /api/food/low-stock
+exports.getLowStockItems = async (req, res) => {
+  try {
+    const lowStock = await Food.find({
+      quantity: { $lte: 5, $gt: 0 },
+      isAvailable: true,
+    }).sort({ quantity: 1 });
+
+    const outOfStock = await Food.find({
+      quantity: 0,
+      isAvailable: true,
+    }).sort({ name: 1 });
+
+    res.status(200).json({
+      success: true,
+      data: {
+        lowStock,
+        outOfStock,
+        lowStockCount: lowStock.length,
+        outOfStockCount: outOfStock.length,
+      },
+    });
+  } catch (err) {
+    console.error("Get low stock error:", err);
     res.status(500).json({ success: false, error: err.message });
   }
 };
@@ -159,14 +217,12 @@ exports.updateFood = async (req, res) => {
       isAvailable: isAvailable !== undefined ? isAvailable : undefined,
     };
 
-    // Remove undefined fields
     Object.keys(updateData).forEach(
       (key) => updateData[key] === undefined && delete updateData[key],
     );
 
     if (req.file) {
       try {
-        // Get existing food to delete old image
         const existingFood = await Food.findById(req.params.id);
         if (existingFood && existingFood.image) {
           const publicId = existingFood.image
@@ -224,7 +280,6 @@ exports.deleteFood = async (req, res) => {
       return res.status(404).json({ success: false, error: "Food not found" });
     }
 
-    // Delete image from cloudinary
     if (food.image) {
       try {
         const publicId = food.image

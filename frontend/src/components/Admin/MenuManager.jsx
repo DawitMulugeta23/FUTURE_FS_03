@@ -1,6 +1,5 @@
-// frontend/src/components/Admin/MenuManager.jsx
 import axios from "axios";
-import { Edit, Save, Trash2, X } from "lucide-react";
+import { AlertCircle, Edit, Save, Trash2, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -28,8 +27,14 @@ const MenuManager = () => {
 
   const fetchMenuItems = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/food");
-      setMenuItems(data.data);
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        "http://localhost:5000/api/food/admin/all",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+      setMenuItems(response.data.data.all);
     } catch (err) {
       console.error("Error fetching menu items", err);
       toast.error("Failed to fetch menu items");
@@ -122,6 +127,9 @@ const MenuManager = () => {
     });
   };
 
+  const outOfStockItems = menuItems.filter((item) => item.quantity === 0);
+  const inStockItems = menuItems.filter((item) => item.quantity > 0);
+
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
@@ -132,16 +140,11 @@ const MenuManager = () => {
 
   return (
     <div className="space-y-6">
-      {/* Add/Edit Form */}
       <div
-        className={`rounded-2xl shadow p-6 transition-colors duration-300 ${
-          darkMode ? "bg-gray-800" : "bg-white"
-        }`}
+        className={`rounded-2xl shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
       >
         <h3
-          className={`text-2xl font-bold mb-6 transition-colors duration-300 ${
-            darkMode ? "text-white" : "text-gray-800"
-          }`}
+          className={`text-2xl font-bold mb-6 ${darkMode ? "text-white" : "text-gray-800"}`}
         >
           {isEditing ? "Edit Menu Item" : "Add New Menu Item"}
         </h3>
@@ -150,9 +153,7 @@ const MenuManager = () => {
           <div className="grid md:grid-cols-2 gap-4">
             <div>
               <label
-                className={`block text-sm font-medium mb-1 transition-colors duration-300 ${
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                }`}
+                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
               >
                 Item Name
               </label>
@@ -161,10 +162,10 @@ const MenuManager = () => {
                 name="name"
                 value={currentItem.name}
                 onChange={handleInputChange}
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none transition-colors duration-300 ${
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
                   darkMode
-                    ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500"
-                    : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"
+                    ? "bg-gray-700 border-gray-600 text-white"
+                    : "bg-white border-gray-300"
                 }`}
                 required
               />
@@ -172,9 +173,7 @@ const MenuManager = () => {
 
             <div>
               <label
-                className={`block text-sm font-medium mb-1 transition-colors duration-300 ${
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                }`}
+                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
               >
                 Price (ETB)
               </label>
@@ -183,10 +182,10 @@ const MenuManager = () => {
                 name="price"
                 value={currentItem.price}
                 onChange={handleInputChange}
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none transition-colors duration-300 ${
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
                   darkMode
-                    ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500"
-                    : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"
+                    ? "bg-gray-700 border-gray-600 text-white"
+                    : "bg-white border-gray-300"
                 }`}
                 required
               />
@@ -194,9 +193,7 @@ const MenuManager = () => {
 
             <div>
               <label
-                className={`block text-sm font-medium mb-1 transition-colors duration-300 ${
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                }`}
+                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
               >
                 Quantity
               </label>
@@ -206,10 +203,10 @@ const MenuManager = () => {
                 min="0"
                 value={currentItem.quantity}
                 onChange={handleInputChange}
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none transition-colors duration-300 ${
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
                   darkMode
-                    ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500"
-                    : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"
+                    ? "bg-gray-700 border-gray-600 text-white"
+                    : "bg-white border-gray-300"
                 }`}
                 required
               />
@@ -217,9 +214,7 @@ const MenuManager = () => {
 
             <div>
               <label
-                className={`block text-sm font-medium mb-1 transition-colors duration-300 ${
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                }`}
+                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
               >
                 Category
               </label>
@@ -227,10 +222,10 @@ const MenuManager = () => {
                 name="category"
                 value={currentItem.category}
                 onChange={handleInputChange}
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none transition-colors duration-300 ${
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
                   darkMode
                     ? "bg-gray-700 border-gray-600 text-white"
-                    : "bg-white border-gray-300 text-gray-900"
+                    : "bg-white border-gray-300"
                 }`}
               >
                 <option value="Coffee">Coffee</option>
@@ -242,9 +237,7 @@ const MenuManager = () => {
 
             <div>
               <label
-                className={`block text-sm font-medium mb-1 transition-colors duration-300 ${
-                  darkMode ? "text-gray-300" : "text-gray-700"
-                }`}
+                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
               >
                 Image
               </label>
@@ -252,29 +245,18 @@ const MenuManager = () => {
                 type="file"
                 onChange={handleImageChange}
                 accept="image/*"
-                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none transition-colors duration-300 ${
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
                   darkMode
-                    ? "bg-gray-700 border-gray-600 text-white file:bg-gray-600 file:text-white file:border-0 file:rounded-lg file:px-3 file:py-1"
-                    : "bg-white border-gray-300 text-gray-900"
+                    ? "bg-gray-700 border-gray-600 text-white"
+                    : "bg-white border-gray-300"
                 }`}
               />
-              {currentItem.image && typeof currentItem.image === "object" && (
-                <p
-                  className={`text-xs mt-1 transition-colors duration-300 ${
-                    darkMode ? "text-green-400" : "text-green-600"
-                  }`}
-                >
-                  New image selected: {currentItem.image.name}
-                </p>
-              )}
             </div>
           </div>
 
           <div>
             <label
-              className={`block text-sm font-medium mb-1 transition-colors duration-300 ${
-                darkMode ? "text-gray-300" : "text-gray-700"
-              }`}
+              className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
             >
               Description
             </label>
@@ -283,10 +265,10 @@ const MenuManager = () => {
               value={currentItem.description}
               onChange={handleInputChange}
               rows={3}
-              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none transition-colors duration-300 ${
+              className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
                 darkMode
-                  ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500"
-                  : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"
+                  ? "bg-gray-700 border-gray-600 text-white"
+                  : "bg-white border-gray-300"
               }`}
               required
             />
@@ -319,83 +301,49 @@ const MenuManager = () => {
         </form>
       </div>
 
-      {/* Menu Items List */}
+      {/* In Stock Items */}
       <div
-        className={`rounded-2xl shadow p-6 transition-colors duration-300 ${
-          darkMode ? "bg-gray-800" : "bg-white"
-        }`}
+        className={`rounded-2xl shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
       >
         <h3
-          className={`text-2xl font-bold mb-6 transition-colors duration-300 ${
-            darkMode ? "text-white" : "text-gray-800"
-          }`}
+          className={`text-2xl font-bold mb-6 ${darkMode ? "text-white" : "text-gray-800"}`}
         >
-          Menu Items
+          In Stock Items ({inStockItems.length})
         </h3>
 
         <div className="overflow-x-auto">
           <table className="w-full">
-            <thead
-              className={`transition-colors duration-300 ${
-                darkMode ? "bg-gray-700" : "bg-gray-50"
-              }`}
-            >
+            <thead className={darkMode ? "bg-gray-700" : "bg-gray-50"}>
               <tr>
-                <th
-                  className={`px-4 py-3 text-left text-sm font-semibold transition-colors duration-300 ${
-                    darkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
+                <th className="px-4 py-3 text-left text-sm font-semibold">
                   Image
                 </th>
-                <th
-                  className={`px-4 py-3 text-left text-sm font-semibold transition-colors duration-300 ${
-                    darkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
+                <th className="px-4 py-3 text-left text-sm font-semibold">
                   Name
                 </th>
-                <th
-                  className={`px-4 py-3 text-left text-sm font-semibold transition-colors duration-300 ${
-                    darkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
+                <th className="px-4 py-3 text-left text-sm font-semibold">
                   Category
                 </th>
-                <th
-                  className={`px-4 py-3 text-left text-sm font-semibold transition-colors duration-300 ${
-                    darkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
+                <th className="px-4 py-3 text-left text-sm font-semibold">
                   Price
                 </th>
-                <th
-                  className={`px-4 py-3 text-left text-sm font-semibold transition-colors duration-300 ${
-                    darkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
+                <th className="px-4 py-3 text-left text-sm font-semibold">
                   Quantity
                 </th>
-                <th
-                  className={`px-4 py-3 text-left text-sm font-semibold transition-colors duration-300 ${
-                    darkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
+                <th className="px-4 py-3 text-left text-sm font-semibold">
                   Actions
                 </th>
               </tr>
             </thead>
             <tbody
-              className={`divide-y transition-colors duration-300 ${
-                darkMode ? "divide-gray-700" : "divide-gray-200"
-              }`}
+              className={`divide-y ${darkMode ? "divide-gray-700" : "divide-gray-200"}`}
             >
-              {menuItems.map((item) => (
+              {inStockItems.map((item) => (
                 <tr
                   key={item._id}
-                  className={`transition-colors duration-300 ${
+                  className={
                     darkMode ? "hover:bg-gray-700" : "hover:bg-gray-50"
-                  }`}
+                  }
                 >
                   <td className="px-4 py-3">
                     <img
@@ -405,15 +353,18 @@ const MenuManager = () => {
                     />
                   </td>
                   <td
-                    className={`px-4 py-3 font-medium transition-colors duration-300 ${
-                      darkMode ? "text-white" : "text-gray-800"
-                    }`}
+                    className={`px-4 py-3 font-medium ${darkMode ? "text-white" : "text-gray-800"}`}
                   >
                     {item.name}
+                    {item.quantity <= 5 && (
+                      <span className="ml-2 text-xs bg-yellow-500 text-white px-2 py-0.5 rounded-full">
+                        Low Stock
+                      </span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`px-2 py-1 rounded-full text-xs font-semibold transition-colors duration-300 ${
+                      className={`px-2 py-1 rounded-full text-xs font-semibold ${
                         darkMode
                           ? "bg-amber-900/50 text-amber-300"
                           : "bg-amber-100 text-amber-700"
@@ -423,31 +374,27 @@ const MenuManager = () => {
                     </span>
                   </td>
                   <td
-                    className={`px-4 py-3 font-bold transition-colors duration-300 ${
-                      darkMode ? "text-amber-400" : "text-amber-900"
-                    }`}
+                    className={`px-4 py-3 font-bold ${darkMode ? "text-amber-400" : "text-amber-900"}`}
                   >
                     {item.price} ETB
                   </td>
                   <td
-                    className={`px-4 py-3 font-semibold transition-colors duration-300 ${
-                      darkMode ? "text-gray-300" : "text-gray-700"
-                    }`}
+                    className={`px-4 py-3 font-semibold ${item.quantity <= 5 ? "text-yellow-600 dark:text-yellow-400" : darkMode ? "text-gray-300" : "text-gray-700"}`}
                   >
-                    {item.quantity ?? 0}
+                    {item.quantity}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex gap-2">
                       <button
                         onClick={() => navigate(`/admin/menu/edit/${item._id}`)}
-                        className="p-1 text-blue-600 hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/30 rounded transition"
+                        className="p-1 text-blue-600 hover:bg-blue-50 rounded transition"
                         title="Edit"
                       >
                         <Edit size={18} />
                       </button>
                       <button
                         onClick={() => handleDelete(item._id)}
-                        className="p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 rounded transition"
+                        className="p-1 text-red-600 hover:bg-red-50 rounded transition"
                         title="Delete"
                       >
                         <Trash2 size={18} />
@@ -459,17 +406,97 @@ const MenuManager = () => {
             </tbody>
           </table>
         </div>
-
-        {menuItems.length === 0 && (
-          <div
-            className={`text-center py-8 transition-colors duration-300 ${
-              darkMode ? "text-gray-400" : "text-gray-500"
-            }`}
-          >
-            No menu items found. Click "Add New Menu Item" to get started.
-          </div>
-        )}
       </div>
+
+      {/* Out of Stock Items Section */}
+      {outOfStockItems.length > 0 && (
+        <div
+          className={`rounded-2xl shadow p-6 ${darkMode ? "bg-gray-800 border border-red-800/50" : "bg-white border border-red-200"}`}
+        >
+          <div className="flex items-center gap-2 mb-6">
+            <AlertCircle size={24} className="text-red-500" />
+            <h3
+              className={`text-2xl font-bold ${darkMode ? "text-white" : "text-gray-800"}`}
+            >
+              Out of Stock Items ({outOfStockItems.length})
+            </h3>
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className={darkMode ? "bg-red-900/30" : "bg-red-100"}>
+                <tr>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                    Image
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                    Name
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                    Category
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                    Price
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                    Status
+                  </th>
+                  <th className="px-4 py-3 text-left text-sm font-semibold">
+                    Actions
+                  </th>
+                </tr>
+              </thead>
+              <tbody
+                className={`divide-y ${darkMode ? "divide-red-800/30" : "divide-red-200"}`}
+              >
+                {outOfStockItems.map((item) => (
+                  <tr
+                    key={item._id}
+                    className={
+                      darkMode ? "hover:bg-red-900/20" : "hover:bg-red-50/50"
+                    }
+                  >
+                    <td className="px-4 py-3">
+                      <img
+                        src={item.image}
+                        alt={item.name}
+                        className="w-12 h-12 object-cover rounded-lg opacity-50"
+                      />
+                    </td>
+                    <td
+                      className={`px-4 py-3 font-medium ${darkMode ? "text-gray-400" : "text-gray-500"}`}
+                    >
+                      {item.name}
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="px-2 py-1 rounded-full text-xs font-semibold bg-gray-200 text-gray-700">
+                        {item.category}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 font-bold text-gray-400">
+                      {item.price} ETB
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700">
+                        <AlertCircle size={12} />
+                        Out of Stock
+                      </span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <button
+                        onClick={() => navigate(`/admin/menu/edit/${item._id}`)}
+                        className="px-3 py-1 bg-amber-600 text-white rounded-lg text-sm hover:bg-amber-700 transition"
+                      >
+                        Restock
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

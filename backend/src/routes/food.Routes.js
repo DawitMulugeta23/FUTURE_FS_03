@@ -1,4 +1,3 @@
-// backend/src/routes/food.Routes.js
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -8,10 +7,12 @@ const router = express.Router();
 const {
   addFood,
   getMenu,
-  getFoodById, // Make sure this is imported
+  getFoodById,
   updateFood,
   deleteFood,
   toggleAvailability,
+  getAllMenuForAdmin,
+  getLowStockItems,
 } = require("../controllers/food.Controller");
 const { protect, authorize } = require("../middleware/authMiddleware");
 
@@ -39,18 +40,29 @@ const upload = multer({
   },
 });
 
-// Routes
-router
-  .route("/")
-  .get(getMenu)
-  .post(protect, authorize("admin"), upload.single("imagePath"), addFood);
+// Public routes (no auth needed for viewing menu)
+router.get("/", getMenu);
+router.get("/:id", getFoodById);
 
-router
-  .route("/:id")
-  .get(getFoodById) // This line now works because getFoodById is defined
-  .put(protect, authorize("admin"), upload.single("imagePath"), updateFood)
-  .delete(protect, authorize("admin"), deleteFood);
+// Admin only routes
+router.get("/admin/all", protect, authorize("admin"), getAllMenuForAdmin);
+router.get("/admin/low-stock", protect, authorize("admin"), getLowStockItems);
 
+router.post(
+  "/",
+  protect,
+  authorize("admin"),
+  upload.single("imagePath"),
+  addFood,
+);
+router.put(
+  "/:id",
+  protect,
+  authorize("admin"),
+  upload.single("imagePath"),
+  updateFood,
+);
+router.delete("/:id", protect, authorize("admin"), deleteFood);
 router.patch("/:id/toggle", protect, authorize("admin"), toggleAvailability);
 
 module.exports = router;
