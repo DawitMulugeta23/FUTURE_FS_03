@@ -1,3 +1,4 @@
+// backend/src/server.js
 const express = require("express");
 const dotenv = require("dotenv");
 const path = require("path");
@@ -8,7 +9,7 @@ const contactRoutes = require("./routes/contactRoutes");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const foodRoutes = require("./routes/food.Routes");
-const orderRoutes = require("./routes/orderRoutes");
+const orderRoutes = require("./routes/orderRoutes"); // ← Make sure this exists
 const adminRoutes = require("./routes/adminRoutes");
 const feedbackRoutes = require("./routes/feedback.routes");
 
@@ -17,7 +18,7 @@ connectDB();
 
 const app = express();
 
-// Comprehensive CORS configuration
+// CORS configuration
 const corsOptions = {
   origin: [
     "http://localhost:5173",
@@ -48,13 +49,14 @@ app.get("/", (req, res) => {
   res.json({ success: true, message: "Yesekela Café API is running" });
 });
 
-// Routes - ORDER MATTERS! More specific routes first
+// Routes - IMPORTANT: Order matters
 app.use("/api/auth", authRoutes);
 app.use("/api/food", foodRoutes);
-app.use("/api/orders", orderRoutes);
-app.use("/api/feedback", feedbackRoutes); // Add this line
+app.use("/api/orders", orderRoutes); // ← THIS MUST BE PRESENT
+app.use("/api/feedback", feedbackRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/contact", contactRoutes);
+
 // Error handling middleware
 app.use((err, req, res, next) => {
   console.error("Error:", err.stack);

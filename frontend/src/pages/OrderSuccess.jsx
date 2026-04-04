@@ -1,23 +1,63 @@
+// frontend/src/pages/OrderSuccess.jsx
+import axios from "axios";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/useCart";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const OrderSuccess = () => {
   const [searchParams] = useSearchParams();
   const { clearCart } = useCart();
+  const [verifying, setVerifying] = useState(true);
+  const [paymentStatus, setPaymentStatus] = useState(null);
 
   const ref = searchParams.get("ref");
-  const rawStatus = searchParams.get("status");
-  const status = rawStatus || (ref ? "processing" : "success");
-  const isSuccess = status === "success";
-  const isFailed = status === "failed";
+  const status = searchParams.get("status");
 
   useEffect(() => {
-    if (isSuccess) {
+    const verifyPayment = async () => {
+      if (ref && status === "success") {
+        try {
+          console.log("Verifying payment for ref:", ref);
+          const response = await axios.get(`${API_URL}/orders/verify/${ref}`);
+          console.log("Verification response:", response.data);
+          setPaymentStatus("success");
+        } catch (error) {
+          console.error("Verification error:", error);
+          setPaymentStatus("failed");
+        }
+      } else if (status === "failed") {
+        setPaymentStatus("failed");
+      } else {
+        setPaymentStatus("pending");
+      }
+      setVerifying(false);
+    };
+
+    verifyPayment();
+  }, [ref, status]);
+
+  useEffect(() => {
+    if (paymentStatus === "success") {
       clearCart();
     }
-  }, [isSuccess, clearCart]);
+  }, [paymentStatus, clearCart]);
+
+  if (verifying) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-amber-50">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-amber-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Verifying your payment...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Removed unused isSuccess variable - only keep isFailed
+  const isFailed = paymentStatus === "failed";
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-10 bg-amber-50">

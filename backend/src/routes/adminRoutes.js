@@ -10,16 +10,9 @@ const {
 const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
 
-// Apply auth middleware as wrapper functions
-router.use(async (req, res, next) => {
-  const authResult = await protect(req, res);
-  if (authResult !== true) return;
-
-  const authResult2 = authorize("admin")(req, res);
-  if (authResult2 !== true) return;
-
-  next();
-});
+// Apply auth middleware for all admin routes
+router.use(protect);
+router.use(authorize("admin"));
 
 // User management routes
 router.get("/users", async (req, res) => {
@@ -168,6 +161,7 @@ router.put("/settings", async (req, res) => {
   }
 });
 
+// Feedback routes
 router.get("/feedback", getAllFeedback);
 router.post("/feedback/:id/reply", replyToFeedback);
 router.delete("/feedback/:id", deleteFeedback);

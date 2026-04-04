@@ -19,6 +19,8 @@ import Orders from "./pages/Orders";
 import OrderSuccess from "./pages/OrderSuccess";
 import Register from "./pages/Register";
 import StaffRegister from "./pages/StaffRegister";
+// frontend/src/App.jsx
+import Profile from "./pages/Profile";
 
 // Inner component to use theme
 const AppContent = () => {
@@ -47,6 +49,14 @@ const AppContent = () => {
           element={
             <ProtectedRoute>
               <Orders />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute>
+              <Profile />
             </ProtectedRoute>
           }
         />

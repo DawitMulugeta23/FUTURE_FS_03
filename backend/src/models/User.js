@@ -5,7 +5,13 @@ const bcrypt = require("bcryptjs");
 const UserSchema = new mongoose.Schema(
   {
     name: { type: String, required: true },
-    email: { type: String, required: true, unique: true },
+    email: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
     password: { type: String, required: true },
     phone: { type: String, default: "" },
     role: {
@@ -19,7 +25,7 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Hash password before saving - WITHOUT next
+// Hash password before saving - FIXED (no next parameter needed)
 UserSchema.pre("save", async function () {
   if (this.isModified("password")) {
     const salt = await bcrypt.genSalt(10);
