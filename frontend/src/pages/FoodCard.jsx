@@ -1,5 +1,4 @@
-// frontend/src/components/FoodCard.jsx
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, ShoppingBag } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
@@ -7,25 +6,24 @@ import { useCart } from "../context/useCart";
 import { useTheme } from "../context/useTheme";
 
 const FoodCard = ({ food }) => {
-  const { addToCart } = useCart();
+  const { addToCart, buyNow } = useCart();
   const navigate = useNavigate();
   const { darkMode } = useTheme();
   const [quantity, setQuantity] = useState(1);
+  const [buyingNow, setBuyingNow] = useState(false);
   const maxQuantity =
     typeof food.quantity === "number" && food.quantity >= 0
       ? food.quantity
       : null;
   const isOutOfStock = maxQuantity === 0;
 
-  // Check if user is logged in and not admin
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const isLoggedIn = !!userInfo;
   const isAdmin = userInfo?.role === "admin";
 
-  // Show add to cart only for logged-in non-admin users
   const canAddToCart = isLoggedIn && !isAdmin;
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.stopPropagation();
 
     if (!isLoggedIn) {
@@ -44,14 +42,62 @@ const FoodCard = ({ food }) => {
       return;
     }
 
-    addToCart(food, quantity);
-    toast.success(
-      `${quantity} ${food.name}${quantity > 1 ? "s" : ""} added to cart!`,
-      {
-        icon: "☕",
-        duration: 2000,
-      },
-    );
+    try {
+      await addToCart(food, quantity);
+      toast.success(
+        `${quantity} ${food.name}${quantity > 1 ? "s" : ""} added to cart!`,
+        {
+          icon: "☕",
+          duration: 2000,
+        },
+      );
+    } catch (error) {
+      toast.error("Failed to add to cart");
+      console.error("Add to cart error:", error);
+    }
+  };
+
+  const handleBuyNow = async (e) => {
+    e.stopPropagation();
+
+    if (!isLoggedIn) {
+      toast.error("Please login to continue");
+      navigate("/login");
+      return;
+    }
+
+    if (isAdmin) {
+      toast.error("Admins cannot place orders.");
+      return;
+    }
+
+    if (isOutOfStock) {
+      toast.error(`${food.name} is currently out of stock.`);
+      return;
+    }
+
+    setBuyingNow(true);
+    const loadingToast = toast.loading("Preparing checkout...");
+
+    try {
+      const result = await buyNow(food._id, quantity);
+
+      toast.dismiss(loadingToast);
+
+      sessionStorage.setItem(
+        "buyNowItem",
+        JSON.stringify({
+          item: result.orderItem,
+          totalPrice: result.totalPrice,
+        }),
+      );
+
+      navigate("/checkout");
+    } catch (error) {
+      toast.dismiss(loadingToast);
+      toast.error(error.response?.data?.error || "Failed to process");
+      setBuyingNow(false);
+    }
   };
 
   const increaseQuantity = (e) => {
@@ -78,26 +124,6 @@ const FoodCard = ({ food }) => {
     setQuantity((prev) => Math.max(1, prev - 1));
   };
 
-  const handleQuantityChange = (e) => {
-    e.stopPropagation();
-    if (!isLoggedIn) {
-      toast.error("Please login to add items to cart");
-      navigate("/login");
-      return;
-    }
-    const value = Number(e.target.value);
-    if (Number.isNaN(value)) {
-      setQuantity(1);
-      return;
-    }
-    const nextValue = Math.max(1, value);
-    if (maxQuantity !== null) {
-      setQuantity(Math.min(maxQuantity, nextValue));
-    } else {
-      setQuantity(nextValue);
-    }
-  };
-
   const handleCardClick = () => {
     navigate(`/menu/${food._id}`);
   };
@@ -110,9 +136,7 @@ const FoodCard = ({ food }) => {
       }`}
     >
       <div
-        className={`relative h-48 overflow-hidden ${
-          darkMode ? "bg-gray-700" : "bg-amber-50"
-        }`}
+        className={`relative h-48 overflow-hidden ${darkMode ? "bg-gray-700" : "bg-amber-50"}`}
       >
         <img
           src={food.image}
@@ -154,17 +178,6 @@ const FoodCard = ({ food }) => {
             >
               {food.category || "Menu Item"}
             </p>
-            {typeof food.quantity === "number" && canAddToCart && (
-              <p
-                className={`mt-2 text-xs font-medium transition-colors duration-300 ${
-                  darkMode ? "text-gray-400" : "text-gray-500"
-                }`}
-              >
-                {food.quantity > 0
-                  ? `🍽️ Available: ${food.quantity}`
-                  : "❌ Out of stock"}
-              </p>
-            )}
           </div>
         </div>
 
@@ -176,7 +189,6 @@ const FoodCard = ({ food }) => {
           {food.description}
         </p>
 
-        {/* Show ordering options only for logged-in non-admin users */}
         {canAddToCart && (
           <>
             <div
@@ -189,7 +201,7 @@ const FoodCard = ({ food }) => {
                   darkMode ? "text-gray-300" : "text-gray-700"
                 }`}
               >
-                📦 Quantity
+                Quantity
               </span>
               <div className="flex items-center gap-2">
                 <button
@@ -204,20 +216,9 @@ const FoodCard = ({ food }) => {
                 >
                   <Minus size={16} />
                 </button>
-                <input
-                  type="number"
-                  min="1"
-                  max={maxQuantity ?? undefined}
-                  value={quantity}
-                  onChange={handleQuantityChange}
-                  onClick={(e) => e.stopPropagation()}
-                  disabled={isOutOfStock}
-                  className={`w-14 rounded-lg border px-2 py-1 text-center text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-300 ${
-                    darkMode
-                      ? "bg-gray-600 border-gray-500 text-white focus:border-amber-500"
-                      : "bg-white border-amber-200 text-gray-900 focus:border-amber-500"
-                  }`}
-                />
+                <span className="w-8 text-center font-semibold">
+                  {quantity}
+                </span>
                 <button
                   type="button"
                   onClick={increaseQuantity}
@@ -233,52 +234,56 @@ const FoodCard = ({ food }) => {
               </div>
             </div>
 
-            <button
-              onClick={handleAddToCart}
-              disabled={isOutOfStock}
-              className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 ${
-                isOutOfStock
-                  ? "bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
-                  : darkMode
-                    ? "bg-amber-600 text-white hover:bg-amber-700"
-                    : "bg-amber-100 text-amber-900 hover:bg-amber-900 hover:text-white"
-              }`}
-            >
-              <Plus size={18} />
-              {isOutOfStock
-                ? "Out of Stock"
-                : `Add to Cart • ${(food.price * quantity).toFixed(0)} ETB`}
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={handleAddToCart}
+                disabled={isOutOfStock}
+                className={`flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 ${
+                  isOutOfStock
+                    ? "bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                    : darkMode
+                      ? "bg-amber-600 text-white hover:bg-amber-700"
+                      : "bg-amber-100 text-amber-900 hover:bg-amber-900 hover:text-white"
+                }`}
+              >
+                Add to Cart
+              </button>
+
+              <button
+                onClick={handleBuyNow}
+                disabled={isOutOfStock || buyingNow}
+                className={`flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 ${
+                  isOutOfStock
+                    ? "bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                    : "bg-emerald-600 text-white hover:bg-emerald-700"
+                }`}
+              >
+                {buyingNow ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent" />
+                ) : (
+                  <ShoppingBag size={18} />
+                )}
+                Buy Now
+              </button>
+            </div>
           </>
         )}
 
-        {/* Show login prompt for non-logged in users */}
         {!isLoggedIn && (
           <button
             onClick={(e) => {
               e.stopPropagation();
               navigate("/login");
             }}
-            className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 font-bold transition ${
-              darkMode
-                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-            }`}
+            className="flex w-full items-center justify-center gap-2 rounded-xl py-2.5 font-bold transition bg-gray-100 text-gray-700 hover:bg-gray-200"
           >
             Login to Order
           </button>
         )}
 
-        {/* Admin message when logged in as admin */}
         {isLoggedIn && isAdmin && (
-          <div
-            className={`mt-3 p-2 rounded-lg text-center text-xs transition-colors duration-300 ${
-              darkMode
-                ? "bg-gray-700 text-gray-400"
-                : "bg-gray-100 text-gray-500"
-            }`}
-          >
-            🔒 Admin accounts cannot place orders
+          <div className="mt-3 p-2 rounded-lg text-center text-xs bg-gray-100 text-gray-500">
+            Admin accounts cannot place orders
           </div>
         )}
       </div>

@@ -9,7 +9,8 @@ const contactRoutes = require("./routes/contactRoutes");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const foodRoutes = require("./routes/food.Routes");
-const orderRoutes = require("./routes/orderRoutes"); // ← Make sure this exists
+const orderRoutes = require("./routes/orderRoutes"); 
+const cartRoutes = require("./routes/cartRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const feedbackRoutes = require("./routes/feedback.routes");
 
@@ -56,6 +57,7 @@ app.use("/api/orders", orderRoutes); // ← THIS MUST BE PRESENT
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/contact", contactRoutes);
+app.use("/api/cart", cartRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {
