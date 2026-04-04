@@ -1,14 +1,14 @@
-// frontend/src/components/Navbar.jsx - Update the cart section
+// frontend/src/components/Navbar.jsx
 import {
   ChevronDown,
   ClipboardList,
   Coffee,
   LogOut,
+  MessageSquare,
   Moon,
   ShoppingCart,
   Sun,
   User,
-  MessageSquare,
 } from "lucide-react";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
@@ -25,8 +25,9 @@ const Navbar = () => {
   const itemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const [showFeedback, setShowFeedback] = useState(false);
-  
-  // Check if user is admin
+
+  // Check if user is logged in and admin
+  const isLoggedIn = !!userInfo;
   const isAdmin = userInfo?.role === "admin";
 
   const handleLogout = () => {
@@ -50,29 +51,41 @@ const Navbar = () => {
 
         {/* Center: Navigation Links */}
         <div className="flex gap-6 items-center">
-          <Link to="/about" className="hover:text-amber-400 transition font-medium">
+          <Link
+            to="/about"
+            className="hover:text-amber-400 transition font-medium"
+          >
             About
           </Link>
-          <Link to="/menu" className="hover:text-amber-400 transition font-medium">
+          <Link
+            to="/menu"
+            className="hover:text-amber-400 transition font-medium"
+          >
             Menu
           </Link>
-          {userInfo && !isAdmin && (
-            <Link to="/myorders" className="hover:text-amber-400 transition font-medium">
+          {isLoggedIn && !isAdmin && (
+            <Link
+              to="/myorders"
+              className="hover:text-amber-400 transition font-medium"
+            >
               Orders
             </Link>
           )}
-          <Link to="/contact" className="hover:text-amber-400 transition font-medium">
+          <Link
+            to="/contact"
+            className="hover:text-amber-400 transition font-medium"
+          >
             Contact
           </Link>
         </div>
 
         {/* Right Side: Cart, Dark Mode, User Profile */}
         <div className="flex gap-4 items-center">
-          {/* Cart Icon - Hide for admin */}
-          {!isAdmin && (
+          {/* Cart Icon - Only for logged-in non-admin users */}
+          {isLoggedIn && !isAdmin && (
             <Link
               to="/cart"
-              className="relative p-2 rounded-full hover:bg-amber-800 transition"
+              className="relative p-2 rounded-full hover:bg-amber-800 dark:hover:bg-gray-700 transition"
             >
               <ShoppingCart size={22} />
               {itemCount > 0 && (
@@ -86,18 +99,18 @@ const Navbar = () => {
           {/* Dark Mode Toggle */}
           <button
             onClick={toggleDarkMode}
-            className="p-2 rounded-full hover:bg-amber-800 transition"
+            className="p-2 rounded-full hover:bg-amber-800 dark:hover:bg-gray-700 transition"
             aria-label="Toggle dark mode"
           >
             {darkMode ? <Sun size={20} /> : <Moon size={20} />}
           </button>
 
           {/* User Profile / Login */}
-          {userInfo ? (
+          {isLoggedIn ? (
             <div className="relative">
               <button
                 onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-                className="bg-amber-700 px-3 py-2 rounded-full text-sm font-bold flex items-center gap-1 hover:bg-amber-600 transition"
+                className="bg-amber-700 dark:bg-gray-700 px-3 py-2 rounded-full text-sm font-bold flex items-center gap-1 hover:bg-amber-600 dark:hover:bg-gray-600 transition"
               >
                 <User size={16} />
                 {userInfo.name.split(" ")[0]}
@@ -107,46 +120,72 @@ const Navbar = () => {
                 />
               </button>
 
-              {/* Dropdown Menu */}
+              {/* Dropdown Menu - Dark Mode Applied */}
               {isDropdownOpen && (
-                <div className="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl py-2 z-50 border border-gray-100">
+                <div
+                  className={`absolute right-0 mt-2 w-48 rounded-xl shadow-xl py-2 z-50 border transition-colors duration-300 ${
+                    darkMode
+                      ? "bg-gray-800 border-gray-700"
+                      : "bg-white border-gray-100"
+                  }`}
+                >
                   {/* Feedback option inside dropdown */}
                   <button
                     onClick={() => {
                       setShowFeedback(true);
                       setIsDropdownOpen(false);
                     }}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-amber-50 transition text-sm"
+                    className={`w-full flex items-center gap-2 px-4 py-2 text-sm transition-colors duration-300 ${
+                      darkMode
+                        ? "text-gray-300 hover:bg-gray-700"
+                        : "text-gray-700 hover:bg-amber-50"
+                    }`}
                   >
                     <MessageSquare size={16} /> Give Feedback
                   </button>
-                  
+
                   {userInfo.role === "admin" && (
                     <Link
                       to="/admin"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-amber-50 transition text-sm"
+                      className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors duration-300 ${
+                        darkMode
+                          ? "text-gray-300 hover:bg-gray-700"
+                          : "text-gray-700 hover:bg-amber-50"
+                      }`}
                     >
                       <ClipboardList size={16} /> Admin Dashboard
                     </Link>
                   )}
-                  
+
                   {/* Only show My Orders in dropdown for non-admin users */}
                   {!isAdmin && (
                     <Link
                       to="/myorders"
                       onClick={() => setIsDropdownOpen(false)}
-                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-amber-50 transition text-sm"
+                      className={`flex items-center gap-2 px-4 py-2 text-sm transition-colors duration-300 ${
+                        darkMode
+                          ? "text-gray-300 hover:bg-gray-700"
+                          : "text-gray-700 hover:bg-amber-50"
+                      }`}
                     >
                       <ClipboardList size={16} /> My Orders
                     </Link>
                   )}
-                  
-                  <hr className="my-1 border-gray-100" />
-                  
+
+                  <hr
+                    className={`my-1 transition-colors duration-300 ${
+                      darkMode ? "border-gray-700" : "border-gray-100"
+                    }`}
+                  />
+
                   <button
                     onClick={handleLogout}
-                    className="w-full flex items-center gap-2 px-4 py-2 text-red-600 hover:bg-red-50 transition text-sm text-left"
+                    className={`w-full flex items-center gap-2 px-4 py-2 text-sm transition-colors duration-300 ${
+                      darkMode
+                        ? "text-red-400 hover:bg-gray-700"
+                        : "text-red-600 hover:bg-red-50"
+                    }`}
                   >
                     <LogOut size={16} /> Logout
                   </button>
@@ -154,7 +193,10 @@ const Navbar = () => {
               )}
             </div>
           ) : (
-            <Link to="/login" className="hover:text-amber-400 transition font-medium">
+            <Link
+              to="/login"
+              className="hover:text-amber-400 transition font-medium"
+            >
               Login
             </Link>
           )}
@@ -162,7 +204,10 @@ const Navbar = () => {
       </div>
 
       {/* Feedback Modal */}
-      <FeedbackModal isOpen={showFeedback} onClose={() => setShowFeedback(false)} />
+      <FeedbackModal
+        isOpen={showFeedback}
+        onClose={() => setShowFeedback(false)}
+      />
     </nav>
   );
 };

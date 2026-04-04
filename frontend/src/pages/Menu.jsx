@@ -59,6 +59,7 @@ const Menu = () => {
       >
         <div className="mx-auto max-w-7xl px-4 py-4">
           <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+            {/* Search Input */}
             <div className="relative w-full md:max-w-md">
               <Search
                 size={18}
@@ -79,24 +80,30 @@ const Menu = () => {
               />
             </div>
 
-            <div className="flex flex-wrap gap-2">
-              {categories.map((category) => (
-                <button
-                  key={category}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`rounded-full px-4 py-2 text-sm font-semibold transition ${
-                    selectedCategory === category
-                      ? darkMode
-                        ? "bg-amber-600 text-white shadow"
-                        : "bg-amber-700 text-white shadow"
-                      : darkMode
-                        ? "bg-gray-700 text-gray-200 hover:bg-gray-600"
-                        : "bg-amber-100 text-amber-900 hover:bg-amber-200"
-                  }`}
-                >
-                  {category}
-                </button>
-              ))}
+            {/* Category Dropdown */}
+            <div className="flex items-center gap-3">
+              <label
+                className={`text-sm font-medium transition-colors duration-300 ${
+                  darkMode ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                Category:
+              </label>
+              <select
+                value={selectedCategory}
+                onChange={(e) => setSelectedCategory(e.target.value)}
+                className={`rounded-xl px-4 py-2 text-sm font-semibold border outline-none transition-colors duration-300 cursor-pointer ${
+                  darkMode
+                    ? "bg-gray-700 border-gray-600 text-white focus:ring-2 focus:ring-amber-500"
+                    : "bg-white border-gray-200 text-gray-900 focus:ring-2 focus:ring-amber-500"
+                }`}
+              >
+                {categories.map((category) => (
+                  <option key={category} value={category}>
+                    {category}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -130,11 +137,22 @@ const Menu = () => {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredFoods.map((food) => (
-              <FoodCard key={food._id} food={food} />
-            ))}
-          </div>
+          <>
+            {/* Results Count */}
+            <div
+              className={`mb-4 text-sm transition-colors duration-300 ${
+                darkMode ? "text-gray-400" : "text-gray-500"
+              }`}
+            >
+              Found {filteredFoods.length} item
+              {filteredFoods.length !== 1 ? "s" : ""}
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {filteredFoods.map((food) => (
+                <FoodCard key={food._id} food={food} />
+              ))}
+            </div>
+          </>
         )}
       </div>
     </section>

@@ -1,8 +1,11 @@
+// frontend/src/pages/AdminDashboard.jsx
 import axios from "axios";
 import { Coffee, Download, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Route, Routes } from "react-router-dom";
 import DashboardStats from "../components/Admin/DashboardStats";
+import EditMenuItem from "../components/Admin/EditMenuItem";
+import FeedbackManager from "../components/Admin/FeedbackManager";
 import MenuManager from "../components/Admin/MenuManager";
 import OrdersManager from "../components/Admin/OrdersManager";
 import UsersManager from "../components/Admin/UserManager";
@@ -11,10 +14,9 @@ import AdminSidebar from "../components/AdminSidebar";
 import EmailCampaign from "../components/EmailCampaign";
 import MapComponent from "../components/MapComponent";
 import { useTheme } from "../context/useTheme";
-import FeedbackManager from "../components/Admin/FeedbackManager";
-import EditMenuItem from "../components/Admin/EditMenuItem";
 
 const AdminDashboard = () => {
+  const { darkMode } = useTheme();
   const [stats, setStats] = useState({
     totalOrders: 0,
     totalRevenue: 0,
@@ -30,7 +32,6 @@ const AdminDashboard = () => {
     dailySales: [],
   });
   const [loading, setLoading] = useState(true);
-  const { darkMode } = useTheme();
 
   useEffect(() => {
     fetchStats();
@@ -54,6 +55,7 @@ const AdminDashboard = () => {
         todayOrders: ordersRes.data.stats.todayOrders,
         todayRevenue: ordersRes.data.stats.todayRevenue,
         pendingOrders: ordersRes.data.stats.pendingOrders,
+        totalMenuItems: 0,
       });
 
       setAnalytics({
@@ -100,22 +102,39 @@ const AdminDashboard = () => {
     window.URL.revokeObjectURL(url);
   };
 
+  const getStatusColor = (status) => {
+    const colors = {
+      Pending:
+        "bg-yellow-100 text-yellow-700 dark:bg-yellow-900/50 dark:text-yellow-300",
+      Preparing:
+        "bg-blue-100 text-blue-700 dark:bg-blue-900/50 dark:text-blue-300",
+      Delivered:
+        "bg-green-100 text-green-700 dark:bg-green-900/50 dark:text-green-300",
+      Cancelled: "bg-red-100 text-red-700 dark:bg-red-900/50 dark:text-red-300",
+    };
+    return (
+      colors[status] ||
+      "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
+    );
+  };
+
   return (
     <div
-      className={`flex min-h-screen ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}
+      className={`flex min-h-screen transition-colors duration-300 ${darkMode ? "bg-gray-900" : "bg-gray-100"}`}
     >
       <AdminSidebar />
 
       <div className="flex-1 ml-64">
         <div className="p-8">
           <Routes>
+            {/* Dashboard Home - exact path */}
             <Route
               path="/"
               element={
                 <>
-                  <div className="flex justify-between items-center mb-6">
+                  <div className="flex justify-between items-center mb-6 flex-wrap gap-4">
                     <h1
-                      className={`text-3xl font-bold ${darkMode ? "text-white" : "text-gray-800"}`}
+                      className={`text-3xl font-bold transition-colors duration-300 ${darkMode ? "text-white" : "text-gray-800"}`}
                     >
                       Dashboard
                     </h1>
@@ -135,14 +154,16 @@ const AdminDashboard = () => {
 
                   {/* Analytics Section */}
                   <div className="grid lg:grid-cols-2 gap-6 mt-8">
-                    {/* Daily Sales Chart */}
                     <div
-                      className={`rounded-2xl shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+                      className={`rounded-2xl shadow p-6 transition-colors duration-300 ${darkMode ? "bg-gray-800" : "bg-white"}`}
                     >
                       <h3
                         className={`text-xl font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-800"}`}
                       >
-                        <TrendingUp size={20} className="text-amber-600" />
+                        <TrendingUp
+                          size={20}
+                          className="text-amber-600 dark:text-amber-400"
+                        />
                         Last 7 Days Sales
                       </h3>
                       <div className="space-y-3">
@@ -156,11 +177,11 @@ const AdminDashboard = () => {
                               >
                                 {day.date}
                               </span>
-                              <span className="font-bold text-amber-600">
+                              <span className="font-bold text-amber-600 dark:text-amber-400">
                                 {day.revenue} ETB
                               </span>
                             </div>
-                            <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                               <div
                                 className="bg-amber-600 h-2 rounded-full transition-all duration-500"
                                 style={{
@@ -168,7 +189,9 @@ const AdminDashboard = () => {
                                 }}
                               />
                             </div>
-                            <div className="text-xs text-gray-500 mt-1">
+                            <div
+                              className={`text-xs mt-1 ${darkMode ? "text-gray-500" : "text-gray-500"}`}
+                            >
                               {day.orders} orders
                             </div>
                           </div>
@@ -176,14 +199,16 @@ const AdminDashboard = () => {
                       </div>
                     </div>
 
-                    {/* Top Selling Items */}
                     <div
-                      className={`rounded-2xl shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+                      className={`rounded-2xl shadow p-6 transition-colors duration-300 ${darkMode ? "bg-gray-800" : "bg-white"}`}
                     >
                       <h3
                         className={`text-xl font-bold mb-4 flex items-center gap-2 ${darkMode ? "text-white" : "text-gray-800"}`}
                       >
-                        <Coffee size={20} className="text-amber-600" />
+                        <Coffee
+                          size={20}
+                          className="text-amber-600 dark:text-amber-400"
+                        />
                         Top Selling Items
                       </h3>
                       <div className="space-y-3">
@@ -200,11 +225,13 @@ const AdminDashboard = () => {
                                 >
                                   {item.name}
                                 </p>
-                                <p className="text-sm text-gray-500">
+                                <p
+                                  className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}
+                                >
                                   Sold: {item.totalSold}
                                 </p>
                               </div>
-                              <p className="font-bold text-amber-600">
+                              <p className="font-bold text-amber-600 dark:text-amber-400">
                                 {item.totalRevenue} ETB
                               </p>
                             </div>
@@ -213,7 +240,6 @@ const AdminDashboard = () => {
                     </div>
                   </div>
 
-                  {/* Status Distribution */}
                   <div
                     className={`rounded-2xl shadow p-6 mt-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
                   >
@@ -238,14 +264,26 @@ const AdminDashboard = () => {
                 </>
               }
             />
-            <Route path="/menu" element={<MenuManager />} />
-            <Route path="/orders" element={<OrdersManager />} />
-            <Route path="/users" element={<UsersManager />} />
-            <Route path="/email" element={<EmailCampaign />} />
-            <Route path="/feedback" element={<FeedbackManager />} />
-            <Route path="/menu/edit/:id" element={<EditMenuItem />} /> 
+
+            {/* Menu Manager */}
+            <Route path="menu" element={<MenuManager />} />
+            <Route path="menu/edit/:id" element={<EditMenuItem />} />
+
+            {/* Orders Manager */}
+            <Route path="orders" element={<OrdersManager />} />
+
+            {/* Users Manager */}
+            <Route path="users" element={<UsersManager />} />
+
+            {/* Email Campaign */}
+            <Route path="email" element={<EmailCampaign />} />
+
+            {/* Feedback Manager */}
+            <Route path="feedback" element={<FeedbackManager />} />
+
+            {/* Location */}
             <Route
-              path="/location"
+              path="location"
               element={
                 <div
                   className={`rounded-2xl shadow p-6 ${darkMode ? "bg-gray-800" : "bg-white"}`}
@@ -257,25 +295,37 @@ const AdminDashboard = () => {
                   </h3>
                   <MapComponent />
                   <div className="mt-6 grid md:grid-cols-2 gap-4">
-                    <div className="bg-amber-50 dark:bg-amber-900 p-4 rounded-xl">
-                      <h4 className="font-bold text-amber-900 dark:text-amber-100 mb-2">
+                    <div className="bg-amber-50 dark:bg-amber-900/30 p-4 rounded-xl">
+                      <h4
+                        className={`font-bold mb-2 ${darkMode ? "text-amber-400" : "text-amber-900"}`}
+                      >
                         Address
                       </h4>
-                      <p className="text-gray-700 dark:text-gray-300">
+                      <p
+                        className={darkMode ? "text-gray-300" : "text-gray-700"}
+                      >
                         Main Road, Near DBU Entrance
                       </p>
-                      <p className="text-gray-700 dark:text-gray-300">
+                      <p
+                        className={darkMode ? "text-gray-300" : "text-gray-700"}
+                      >
                         Debre Berhan, Ethiopia
                       </p>
                     </div>
-                    <div className="bg-amber-50 dark:bg-amber-900 p-4 rounded-xl">
-                      <h4 className="font-bold text-amber-900 dark:text-amber-100 mb-2">
+                    <div className="bg-amber-50 dark:bg-amber-900/30 p-4 rounded-xl">
+                      <h4
+                        className={`font-bold mb-2 ${darkMode ? "text-amber-400" : "text-amber-900"}`}
+                      >
                         Opening Hours
                       </h4>
-                      <p className="text-gray-700 dark:text-gray-300">
+                      <p
+                        className={darkMode ? "text-gray-300" : "text-gray-700"}
+                      >
                         Monday - Friday: 7:00 AM - 9:00 PM
                       </p>
-                      <p className="text-gray-700 dark:text-gray-300">
+                      <p
+                        className={darkMode ? "text-gray-300" : "text-gray-700"}
+                      >
                         Saturday - Sunday: 8:00 AM - 8:00 PM
                       </p>
                     </div>
@@ -283,26 +333,13 @@ const AdminDashboard = () => {
                 </div>
               }
             />
-            <Route path="/settings" element={<AdminSetting />} />
+
+            {/* Settings */}
+            <Route path="settings" element={<AdminSetting />} />
           </Routes>
         </div>
       </div>
     </div>
-  );
-};
-
-const getStatusColor = (status) => {
-  const colors = {
-    Pending:
-      "bg-yellow-100 text-yellow-700 dark:bg-yellow-900 dark:text-yellow-300",
-    Preparing: "bg-blue-100 text-blue-700 dark:bg-blue-900 dark:text-blue-300",
-    Delivered:
-      "bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300",
-    Cancelled: "bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-300",
-  };
-  return (
-    colors[status] ||
-    "bg-gray-100 text-gray-700 dark:bg-gray-700 dark:text-gray-300"
   );
 };
 

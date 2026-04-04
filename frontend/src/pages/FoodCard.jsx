@@ -17,12 +17,22 @@ const FoodCard = ({ food }) => {
       : null;
   const isOutOfStock = maxQuantity === 0;
 
-  // Check if user is admin
+  // Check if user is logged in and not admin
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const isLoggedIn = !!userInfo;
   const isAdmin = userInfo?.role === "admin";
+
+  // Show add to cart only for logged-in non-admin users
+  const canAddToCart = isLoggedIn && !isAdmin;
 
   const handleAddToCart = (e) => {
     e.stopPropagation();
+
+    if (!isLoggedIn) {
+      toast.error("Please login to add items to cart");
+      navigate("/login");
+      return;
+    }
 
     if (isAdmin) {
       toast.error("Admins cannot place orders. Please use a customer account.");
@@ -46,8 +56,9 @@ const FoodCard = ({ food }) => {
 
   const increaseQuantity = (e) => {
     e.stopPropagation();
-    if (isAdmin) {
-      toast.error("Admins cannot place orders.");
+    if (!isLoggedIn) {
+      toast.error("Please login to add items to cart");
+      navigate("/login");
       return;
     }
     if (maxQuantity !== null && quantity >= maxQuantity) {
@@ -59,8 +70,9 @@ const FoodCard = ({ food }) => {
 
   const decreaseQuantity = (e) => {
     e.stopPropagation();
-    if (isAdmin) {
-      toast.error("Admins cannot place orders.");
+    if (!isLoggedIn) {
+      toast.error("Please login to add items to cart");
+      navigate("/login");
       return;
     }
     setQuantity((prev) => Math.max(1, prev - 1));
@@ -68,8 +80,9 @@ const FoodCard = ({ food }) => {
 
   const handleQuantityChange = (e) => {
     e.stopPropagation();
-    if (isAdmin) {
-      toast.error("Admins cannot place orders.");
+    if (!isLoggedIn) {
+      toast.error("Please login to add items to cart");
+      navigate("/login");
       return;
     }
     const value = Number(e.target.value);
@@ -141,7 +154,7 @@ const FoodCard = ({ food }) => {
             >
               {food.category || "Menu Item"}
             </p>
-            {typeof food.quantity === "number" && !isAdmin && (
+            {typeof food.quantity === "number" && canAddToCart && (
               <p
                 className={`mt-2 text-xs font-medium transition-colors duration-300 ${
                   darkMode ? "text-gray-400" : "text-gray-500"
@@ -163,8 +176,8 @@ const FoodCard = ({ food }) => {
           {food.description}
         </p>
 
-        {/* Only show ordering options for non-admin users */}
-        {!isAdmin && (
+        {/* Show ordering options only for logged-in non-admin users */}
+        {canAddToCart && (
           <>
             <div
               className={`mb-3 flex items-center justify-between rounded-xl px-3 py-2 transition-colors duration-300 ${
@@ -239,8 +252,25 @@ const FoodCard = ({ food }) => {
           </>
         )}
 
+        {/* Show login prompt for non-logged in users */}
+        {!isLoggedIn && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              navigate("/login");
+            }}
+            className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 font-bold transition ${
+              darkMode
+                ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+            }`}
+          >
+            Login to Order
+          </button>
+        )}
+
         {/* Admin message when logged in as admin */}
-        {isAdmin && (
+        {isLoggedIn && isAdmin && (
           <div
             className={`mt-3 p-2 rounded-lg text-center text-xs transition-colors duration-300 ${
               darkMode

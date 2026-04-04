@@ -31,9 +31,13 @@ const MenuItemDetail = () => {
   const [activeImage, setActiveImage] = useState("");
   const [isAdded, setIsAdded] = useState(false);
 
-  // Check if user is admin
+  // Check if user is logged in and admin
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const isLoggedIn = !!userInfo;
   const isAdmin = userInfo?.role === "admin";
+
+  // Show add to cart only for logged-in non-admin users
+  const canAddToCart = isLoggedIn && !isAdmin;
 
   useEffect(() => {
     fetchMenuItem();
@@ -55,6 +59,12 @@ const MenuItemDetail = () => {
 
   const handleAddToCart = () => {
     if (!item) return;
+
+    if (!isLoggedIn) {
+      toast.error("Please login to add items to cart");
+      navigate("/login");
+      return;
+    }
 
     if (isAdmin) {
       toast.error("Admins cannot place orders. Please use a customer account.");
@@ -83,6 +93,11 @@ const MenuItemDetail = () => {
   };
 
   const increaseQuantity = () => {
+    if (!isLoggedIn) {
+      toast.error("Please login to add items to cart");
+      navigate("/login");
+      return;
+    }
     if (isAdmin) {
       toast.error("Admins cannot place orders.");
       return;
@@ -95,6 +110,11 @@ const MenuItemDetail = () => {
   };
 
   const decreaseQuantity = () => {
+    if (!isLoggedIn) {
+      toast.error("Please login to add items to cart");
+      navigate("/login");
+      return;
+    }
     if (isAdmin) {
       toast.error("Admins cannot place orders.");
       return;
@@ -354,8 +374,8 @@ const MenuItemDetail = () => {
               </div>
             </div>
 
-            {/* Quantity Selector and Add to Cart - Only for non-admin */}
-            {!isAdmin && !isOutOfStock && (
+            {/* Quantity Selector and Add to Cart - Only for logged-in non-admin users */}
+            {canAddToCart && !isOutOfStock && (
               <div className="space-y-4">
                 <label
                   className={`font-semibold transition-colors duration-300 ${
@@ -405,8 +425,8 @@ const MenuItemDetail = () => {
               </div>
             )}
 
-            {/* Add to Cart Button - Only for non-admin */}
-            {!isAdmin && (
+            {/* Add to Cart Button - Only for logged-in non-admin users */}
+            {canAddToCart && (
               <div className="space-y-3">
                 <button
                   onClick={handleAddToCart}
@@ -441,6 +461,64 @@ const MenuItemDetail = () => {
               </div>
             )}
 
+            {/* Login Prompt for Non-Logged Users */}
+            {!isLoggedIn && (
+              <div
+                className={`rounded-xl p-6 text-center transition-colors duration-300 ${
+                  darkMode ? "bg-gray-800" : "bg-amber-50"
+                }`}
+              >
+                <div className="text-4xl mb-3">🔒</div>
+                <h3
+                  className={`font-bold mb-2 transition-colors duration-300 ${
+                    darkMode ? "text-white" : "text-amber-800"
+                  }`}
+                >
+                  Login to Order
+                </h3>
+                <p
+                  className={`text-sm mb-4 transition-colors duration-300 ${
+                    darkMode ? "text-gray-400" : "text-amber-700"
+                  }`}
+                >
+                  Please login to add items to your cart and place orders.
+                </p>
+                <button
+                  onClick={() => navigate("/login")}
+                  className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 transition"
+                >
+                  Login Now
+                </button>
+              </div>
+            )}
+
+            {/* Admin Restriction Message */}
+            {isLoggedIn && isAdmin && (
+              <div
+                className={`rounded-xl p-6 text-center border transition-colors duration-300 ${
+                  darkMode
+                    ? "bg-gray-800 border-gray-700"
+                    : "bg-amber-50 border-amber-200"
+                }`}
+              >
+                <div className="text-4xl mb-3">🔒</div>
+                <h3
+                  className={`font-bold mb-2 transition-colors duration-300 ${
+                    darkMode ? "text-white" : "text-amber-800"
+                  }`}
+                >
+                  Admin Restriction
+                </h3>
+                <p
+                  className={`text-sm transition-colors duration-300 ${
+                    darkMode ? "text-gray-400" : "text-amber-700"
+                  }`}
+                >
+                  Admin accounts cannot add items to cart or place orders.
+                </p>
+              </div>
+            )}
+
             {/* Delivery Information */}
             <div
               className={`rounded-xl p-4 space-y-2 transition-colors duration-300 ${
@@ -470,8 +548,8 @@ const MenuItemDetail = () => {
               </p>
             </div>
 
-            {/* Share Buttons - Only for non-admin */}
-            {!isAdmin && (
+            {/* Share Buttons - Only for logged-in users */}
+            {isLoggedIn && !isAdmin && (
               <div className="flex gap-3 pt-4">
                 <button
                   className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition ${
