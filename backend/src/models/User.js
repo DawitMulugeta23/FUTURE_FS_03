@@ -14,43 +14,20 @@ const UserSchema = new mongoose.Schema(
       default: "user",
     },
     isActive: { type: Boolean, default: true },
-    createdAt: { type: Date, default: Date.now },
     lastLogin: { type: Date },
-
-    // Staff/Admin specific fields
-    department: {
-      type: String,
-      enum: ["management", "kitchen", "service", "delivery"],
-      default: "service",
-    },
-    employeeId: { type: String, unique: true, sparse: true },
-    hireDate: { type: Date },
-    shift: {
-      type: String,
-      enum: ["morning", "evening", "night"],
-      default: "morning",
-    },
   },
   { timestamps: true },
 );
 
-// Encrypt password before saving - FIXED: properly handle next
-UserSchema.pre("save", async function (next) {
-  // Only hash the password if it's modified (or new)
-  if (!this.isModified("password")) {
-    return next();
-  }
-
-  try {
+// Hash password before saving - WITHOUT next
+UserSchema.pre("save", async function () {
+  if (this.isModified("password")) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
-    next();
-  } catch (error) {
-    next(error);
   }
 });
 
-// Match password method
+// Compare password method
 UserSchema.methods.matchPassword = async function (enteredPassword) {
   return await bcrypt.compare(enteredPassword, this.password);
 };

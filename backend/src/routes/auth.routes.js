@@ -12,13 +12,13 @@ const {
 router.post("/register", registerCustomer);
 router.post("/register/customer", registerCustomer);
 
-// Admin routes (protected by admin code)
+// Admin routes
 router.post("/register/admin", registerAdmin);
 
-// Staff routes (protected by manager code)
+// Staff routes
 router.post("/register/staff", registerStaff);
 
-// Login route (common)
+// Login route
 router.post("/login", login);
 
 module.exports = router;

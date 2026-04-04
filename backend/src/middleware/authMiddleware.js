@@ -1,8 +1,9 @@
+// backend/src/middleware/authMiddleware.js
 const jwt = require("jsonwebtoken");
 const User = require("../models/User");
 
 // Protect routes - Ensures user is logged in
-exports.protect = async (req, res, next) => {
+exports.protect = async (req, res) => {
   let token;
 
   if (
@@ -13,30 +14,42 @@ exports.protect = async (req, res, next) => {
   }
 
   if (!token) {
-    return res
-      .status(401)
-      .json({ success: false, message: "Not authorized to access this route" });
+    return res.status(401).json({
+      success: false,
+      message: "Not authorized to access this route",
+    });
   }
 
   try {
-    // Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const user = await User.findById(decoded.id).select("-password");
 
-    // Add user to request
-    req.user = await User.findById(decoded.id);
-    next();
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    req.user = user;
+    return true;
   } catch (err) {
-    return res.status(401).json({ success: false, message: "Not authorized" });
+    console.error("Auth error:", err.message);
+    return res.status(401).json({
+      success: false,
+      message: "Not authorized",
+    });
   }
 };
 
-// Grant access to specific roles (e.g., 'admin')
+// Grant access to specific roles
 exports.authorize = (...roles) => {
-  return (req, res, next) => {
+  return (req, res) => {
     if (!req.user) {
-      return res
-        .status(401)
-        .json({ success: false, message: "Not authorized" });
+      return res.status(401).json({
+        success: false,
+        message: "Not authorized",
+      });
     }
 
     if (!roles.includes(req.user.role)) {
@@ -45,6 +58,6 @@ exports.authorize = (...roles) => {
         message: `User role ${req.user.role} is not authorized to access this route`,
       });
     }
-    next();
+    return true;
   };
 };

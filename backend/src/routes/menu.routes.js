@@ -1,38 +1,29 @@
+// backend/src/routes/menu.routes.js
 const express = require("express");
 const router = express.Router();
 const menuController = require("../controllers/menu.controller");
-const { protect, admin } = require("../middleware/auth.middleware");
-const { validate } = require("../middleware/validation.middleware");
-const {
-  createMenuSchema,
-  updateMenuSchema,
-} = require("../validations/menu.validation");
+const { protect, authorize } = require("../middleware/authMiddleware");
 
+// Public routes
 router.get("/", menuController.getAllMenuItems);
 router.get("/specials", menuController.getSpecials);
 router.get("/categories", menuController.getCategories);
 router.get("/category/:category", menuController.getMenuByCategory);
 router.get("/:id", menuController.getMenuItemById);
 
-router.post(
-  "/",
-  protect,
-  admin,
-  validate(createMenuSchema),
-  menuController.createMenuItem,
-);
-router.put(
+// Protected admin routes
+router.post("/", protect, authorize("admin"), menuController.createMenuItem);
+router.put("/:id", protect, authorize("admin"), menuController.updateMenuItem);
+router.delete(
   "/:id",
   protect,
-  admin,
-  validate(updateMenuSchema),
-  menuController.updateMenuItem,
+  authorize("admin"),
+  menuController.deleteMenuItem,
 );
-router.delete("/:id", protect, admin, menuController.deleteMenuItem);
 router.patch(
   "/:id/availability",
   protect,
-  admin,
+  authorize("admin"),
   menuController.toggleAvailability,
 );
 

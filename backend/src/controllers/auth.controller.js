@@ -20,7 +20,6 @@ const sendTokenResponse = (user, statusCode, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      phone: user.phone,
     },
   });
 };
@@ -28,53 +27,68 @@ const sendTokenResponse = (user, statusCode, res) => {
 // Customer Registration
 exports.registerCustomer = async (req, res) => {
   try {
-    const { name, email, password, phone } = req.body;
+    const { name, email, password } = req.body;
 
-    // Check if user exists
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Email already registered" });
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: "Please provide name, email and password",
+      });
     }
 
-    // Check if this is the first user (make them admin)
+    if (password.length < 6) {
+      return res.status(400).json({
+        success: false,
+        error: "Password must be at least 6 characters",
+      });
+    }
+
+    const existingUser = await User.findOne({ email });
+    if (existingUser) {
+      return res.status(400).json({
+        success: false,
+        error: "Email already registered",
+      });
+    }
+
     const userCount = await User.countDocuments();
     const role = userCount === 0 ? "admin" : "user";
 
-    // Create customer account
     const user = await User.create({
       name,
       email,
       password,
-      phone,
       role: role,
     });
 
-    // Send welcome email
-    try {
-      await sendEmail({
-        email: user.email,
-        subject: "Welcome to Yesekela Cafe!",
-        message: `Welcome to Yesekela Cafe, ${name}! We are thrilled to have you. Enjoy our fresh brews and delicious meals!`,
-      });
-    } catch (emailError) {
-      console.error("Welcome email failed:", emailError.message);
-    }
+    sendEmail({
+      email: user.email,
+      subject: "Welcome to Yesekela Cafe!",
+      message: `Welcome to Yesekela Cafe, ${name}! We are thrilled to have you.`,
+    }).catch((err) => console.error("Email error:", err.message));
 
     sendTokenResponse(user, 201, res);
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    console.error("Registration error:", err);
+    res.status(500).json({
+      success: false,
+      error: err.message || "Registration failed",
+    });
   }
 };
 
 // Admin Registration
 exports.registerAdmin = async (req, res) => {
   try {
-    const { name, email, password, phone, adminCode, department, employeeId } =
-      req.body;
+    const { name, email, password, adminCode } = req.body;
 
-    // Verify admin code
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: "Please provide name, email and password",
+      });
+    }
+
     const validAdminCode =
       process.env.ADMIN_REGISTRATION_CODE || "YESEKELA_ADMIN_2024";
 
@@ -85,115 +99,105 @@ exports.registerAdmin = async (req, res) => {
       });
     }
 
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Email already registered" });
+      return res.status(400).json({
+        success: false,
+        error: "Email already registered",
+      });
     }
 
-    // Create admin account
     const user = await User.create({
       name,
       email,
       password,
-      phone,
       role: "admin",
-      department: department || "management",
-      employeeId: employeeId || `ADMIN_${Date.now()}`,
-      hireDate: new Date(),
-      isActive: true,
     });
-
-    // Send welcome email to admin
-    try {
-      await sendEmail({
-        email: user.email,
-        subject: "Welcome to Yesekela Cafe Admin Team!",
-        message: `Welcome ${name}! You have been registered as an administrator. You can now manage the cafe operations.`,
-      });
-    } catch (emailError) {
-      console.error("Welcome email failed:", emailError.message);
-    }
 
     sendTokenResponse(user, 201, res);
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    console.error("Admin registration error:", err);
+    res.status(500).json({
+      success: false,
+      error: err.message || "Admin registration failed",
+    });
   }
 };
 
 // Staff Registration
 exports.registerStaff = async (req, res) => {
   try {
-    const {
-      name,
-      email,
-      password,
-      phone,
-      department,
-      shift,
-      employeeId,
-      managerCode,
-    } = req.body;
+    const { name, email, password, managerCode } = req.body;
 
-    // Verify manager code
+    if (!name || !email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: "Please provide name, email and password",
+      });
+    }
+
     const validManagerCode =
       process.env.MANAGER_REGISTRATION_CODE || "YESEKELA_STAFF_2024";
 
     if (managerCode !== validManagerCode) {
       return res.status(403).json({
         success: false,
-        error: "Invalid staff registration code. Please contact manager.",
+        error: "Invalid staff registration code",
       });
     }
 
-    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res
-        .status(400)
-        .json({ success: false, error: "Email already registered" });
+      return res.status(400).json({
+        success: false,
+        error: "Email already registered",
+      });
     }
 
-    // Create staff account
     const user = await User.create({
       name,
       email,
       password,
-      phone,
       role: "staff",
-      department: department || "service",
-      shift: shift || "morning",
-      employeeId: employeeId || `STAFF_${Date.now()}`,
-      hireDate: new Date(),
-      isActive: true,
     });
 
     sendTokenResponse(user, 201, res);
   } catch (err) {
-    res.status(400).json({ success: false, error: err.message });
+    console.error("Staff registration error:", err);
+    res.status(500).json({
+      success: false,
+      error: err.message || "Staff registration failed",
+    });
   }
 };
 
-// Login (common for all roles)
+// Login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        error: "Please provide email and password",
+      });
+    }
+
     const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
-      return res
-        .status(401)
-        .json({ success: false, error: "Invalid credentials" });
+      return res.status(401).json({
+        success: false,
+        error: "Invalid credentials",
+      });
     }
 
     const isMatch = await user.matchPassword(password);
     if (!isMatch) {
-      return res
-        .status(401)
-        .json({ success: false, error: "Invalid credentials" });
+      return res.status(401).json({
+        success: false,
+        error: "Invalid credentials",
+      });
     }
 
     if (!user.isActive) {
@@ -203,12 +207,15 @@ exports.login = async (req, res) => {
       });
     }
 
-    // Update last login
     user.lastLogin = Date.now();
     await user.save({ validateBeforeSave: false });
 
     sendTokenResponse(user, 200, res);
   } catch (err) {
-    res.status(500).json({ success: false, error: err.message });
+    console.error("Login error:", err);
+    res.status(500).json({
+      success: false,
+      error: err.message || "Login failed",
+    });
   }
 };

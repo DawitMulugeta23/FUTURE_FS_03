@@ -1,3 +1,4 @@
+// backend/src/routes/adminRoutes.js
 const express = require("express");
 const router = express.Router();
 const { protect, authorize } = require("../middleware/authMiddleware");
@@ -9,15 +10,18 @@ const {
 const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
 
-router.use((req, res, next) => {
-  console.log(`[Admin Routes] ${req.method} ${req.originalUrl}`);
+// Apply auth middleware as wrapper functions
+router.use(async (req, res, next) => {
+  const authResult = await protect(req, res);
+  if (authResult !== true) return;
+
+  const authResult2 = authorize("admin")(req, res);
+  if (authResult2 !== true) return;
+
   next();
 });
 
-// Protect all admin routes
-router.use(protect, authorize("admin"));
-
-// User management
+// User management routes
 router.get("/users", async (req, res) => {
   try {
     const users = await User.find({}).select("-password");
@@ -26,6 +30,7 @@ router.get("/users", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 router.get("/users/count", async (req, res) => {
   try {
     const { filter } = req.query;
@@ -44,6 +49,7 @@ router.get("/users/count", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 router.put("/users/:id/role", async (req, res) => {
   try {
     const { role } = req.body;
@@ -62,6 +68,7 @@ router.put("/users/:id/role", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 router.delete("/users/:id", async (req, res) => {
   try {
     const user = await User.findById(req.params.id);
@@ -82,6 +89,7 @@ router.delete("/users/:id", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 router.post("/email/campaign", async (req, res) => {
   try {
     const { subject, message, userFilter } = req.body;
@@ -96,7 +104,6 @@ router.post("/email/campaign", async (req, res) => {
 
     const users = await User.find(query);
 
-    // Send emails asynchronously
     const emailPromises = users.map((user) =>
       sendEmail({
         email: user.email,
@@ -112,6 +119,7 @@ router.post("/email/campaign", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 router.post("/send-email", async (req, res) => {
   try {
     const { userId, subject, message } = req.body;
@@ -132,6 +140,7 @@ router.post("/send-email", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 router.get("/settings", async (req, res) => {
   try {
     const settings = {
@@ -150,6 +159,7 @@ router.get("/settings", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 router.put("/settings", async (req, res) => {
   try {
     res.json({ success: true, message: "Settings updated successfully" });
@@ -157,6 +167,7 @@ router.put("/settings", async (req, res) => {
     res.status(500).json({ success: false, error: err.message });
   }
 });
+
 router.get("/feedback", getAllFeedback);
 router.post("/feedback/:id/reply", replyToFeedback);
 router.delete("/feedback/:id", deleteFeedback);

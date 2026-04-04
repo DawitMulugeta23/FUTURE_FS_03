@@ -1,3 +1,4 @@
+// backend/src/routes/feedback.routes.js
 const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
@@ -6,7 +7,7 @@ const {
   getMyFeedback,
 } = require("../controllers/feedback.controller");
 
-// Debug middleware to log requests
+// Debug middleware
 router.use((req, res, next) => {
   console.log(`[Feedback Routes] ${req.method} ${req.originalUrl}`);
   next();
