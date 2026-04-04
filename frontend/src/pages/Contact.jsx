@@ -1,15 +1,15 @@
 // frontend/src/pages/Contact.jsx
 import axios from "axios";
 import {
-    Clock,
-    Coffee,
-    Globe,
-    Heart,
-    Mail,
-    MapPin,
-    Phone,
-    Send,
-    Share2,
+  Clock,
+  Coffee,
+  Globe,
+  Heart,
+  Mail,
+  MapPin,
+  Phone,
+  Send,
+  Share2,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "react-hot-toast";

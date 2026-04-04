@@ -1,13 +1,29 @@
+// frontend/src/pages/Cart.jsx
 import axios from "axios";
 import { CreditCard, Minus, Plus, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { toast } from "react-hot-toast";
+import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/useCart";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const Cart = () => {
-  const { cartItems, removeFromCart, updateQuantity } = useCart();
+  const { cartItems, removeFromCart, updateQuantity } = useCart(); // Removed clearCart
   const [isProcessing, setIsProcessing] = useState(false);
+  const navigate = useNavigate();
+
+  // Check if user is admin
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const isAdmin = userInfo?.role === "admin";
+
+  // Redirect admin away from cart page
+  useEffect(() => {
+    if (isAdmin) {
+      toast.error("Admin accounts cannot access the cart or place orders");
+      navigate("/menu");
+    }
+  }, [isAdmin, navigate]);
 
   const totalPrice = cartItems.reduce(
     (acc, item) => acc + item.qty * item.price,
@@ -20,7 +36,7 @@ const Cart = () => {
     const token = localStorage.getItem("token");
 
     if (!token) {
-      alert("Please login to complete your order.");
+      toast.error("Please login to complete your order.");
       return;
     }
 
@@ -38,9 +54,9 @@ const Cart = () => {
         return;
       }
 
-      alert("Unable to start payment. Please try again.");
+      toast.error("Unable to start payment. Please try again.");
     } catch (err) {
-      alert(
+      toast.error(
         err.response?.data?.error ||
           "Unable to start payment. Please try again.",
       );
@@ -50,16 +66,48 @@ const Cart = () => {
     }
   };
 
+  // If admin, show message instead of cart
+  if (isAdmin) {
+    return (
+      <div className="container mx-auto p-6 max-w-4xl min-h-screen flex items-center justify-center">
+        <div className="bg-white shadow-xl rounded-2xl p-8 text-center max-w-md">
+          <div className="text-6xl mb-4">🔒</div>
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            Access Restricted
+          </h2>
+          <p className="text-gray-600 mb-6">
+            Admin accounts cannot place orders. Please use a customer account
+            for ordering.
+          </p>
+          <button
+            onClick={() => navigate("/menu")}
+            className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700"
+          >
+            Browse Menu
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="container mx-auto p-6 max-w-4xl">
+    <div className="container mx-auto p-6 max-w-4xl min-h-screen">
       <h2 className="text-3xl font-bold mb-6 text-amber-900">
         Your Shopping Cart
       </h2>
 
       {cartItems.length === 0 ? (
-        <p className="text-gray-500 text-center text-xl">
-          Your cart is empty. Go grab some coffee!
-        </p>
+        <div className="bg-white shadow-xl rounded-2xl p-8 text-center">
+          <p className="text-gray-500 text-xl">
+            Your cart is empty. Go grab some coffee!
+          </p>
+          <button
+            onClick={() => navigate("/menu")}
+            className="mt-4 bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700"
+          >
+            Browse Menu
+          </button>
+        </div>
       ) : (
         <div className="bg-white shadow-xl rounded-2xl p-6">
           {cartItems.map((item) => (

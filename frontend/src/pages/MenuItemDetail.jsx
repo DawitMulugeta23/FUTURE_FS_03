@@ -1,24 +1,22 @@
 // frontend/src/pages/MenuItemDetail.jsx
-import { useState, useEffect } from "react";
-import { useParams, useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { 
-  ArrowLeft, 
-  Minus, 
-  Plus, 
-  ShoppingCart, 
-  Coffee,
+import {
+  ArrowLeft,
+  CheckCircle,
   Clock,
-  Tag,
-  Package,
-  Star,
-  Truck,
+  Coffee,
   Heart,
+  Minus,
+  Package,
+  Plus,
   Share2,
-  CheckCircle
+  ShoppingCart,
+  Truck,
 } from "lucide-react";
-import { useCart } from "../context/useCart";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
+import { Link, useNavigate, useParams } from "react-router-dom";
+import { useCart } from "../context/useCart";
 
 const MenuItemDetail = () => {
   const { id } = useParams();
@@ -29,6 +27,10 @@ const MenuItemDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState("");
   const [isAdded, setIsAdded] = useState(false);
+
+  // Check if user is admin
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const isAdmin = userInfo?.role === "admin";
 
   useEffect(() => {
     fetchMenuItem();
@@ -50,13 +52,18 @@ const MenuItemDetail = () => {
 
   const handleAddToCart = () => {
     if (!item) return;
-    
+
+    if (isAdmin) {
+      toast.error("Admins cannot place orders. Please use a customer account.");
+      return;
+    }
+
     const maxQuantity = item.quantity;
     if (maxQuantity === 0) {
       toast.error(`${item.name} is out of stock!`);
       return;
     }
-    
+
     if (quantity > maxQuantity) {
       toast.error(`Only ${maxQuantity} ${item.name} available in stock!`);
       return;
@@ -68,21 +75,29 @@ const MenuItemDetail = () => {
       icon: "☕",
       duration: 2000,
     });
-    
+
     setTimeout(() => setIsAdded(false), 2000);
   };
 
   const increaseQuantity = () => {
+    if (isAdmin) {
+      toast.error("Admins cannot place orders.");
+      return;
+    }
     if (item && quantity < item.quantity) {
-      setQuantity(prev => prev + 1);
+      setQuantity((prev) => prev + 1);
     } else {
       toast.error(`Only ${item?.quantity} items available`);
     }
   };
 
   const decreaseQuantity = () => {
+    if (isAdmin) {
+      toast.error("Admins cannot place orders.");
+      return;
+    }
     if (quantity > 1) {
-      setQuantity(prev => prev - 1);
+      setQuantity((prev) => prev - 1);
     }
   };
 
@@ -112,9 +127,16 @@ const MenuItemDetail = () => {
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-amber-50 via-white to-orange-50">
         <div className="text-center">
           <Coffee size={64} className="mx-auto text-amber-400 mb-4" />
-          <h2 className="text-2xl font-bold text-gray-800 mb-2">Item Not Found</h2>
-          <p className="text-gray-600 mb-6">The menu item you're looking for doesn't exist.</p>
-          <Link to="/menu" className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700">
+          <h2 className="text-2xl font-bold text-gray-800 mb-2">
+            Item Not Found
+          </h2>
+          <p className="text-gray-600 mb-6">
+            The menu item you're looking for doesn't exist.
+          </p>
+          <Link
+            to="/menu"
+            className="bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700"
+          >
             Back to Menu
           </Link>
         </div>
@@ -123,7 +145,7 @@ const MenuItemDetail = () => {
   }
 
   const isOutOfStock = item.quantity === 0;
-  const cartItem = cartItems.find(i => i._id === item._id);
+  const cartItem = cartItems.find((i) => i._id === item._id);
   const cartQuantity = cartItem?.qty || 0;
 
   return (
@@ -134,11 +156,40 @@ const MenuItemDetail = () => {
           onClick={() => navigate(-1)}
           className="flex items-center gap-2 text-gray-600 hover:text-amber-600 transition mb-6 group"
         >
-          <ArrowLeft size={20} className="group-hover:-translate-x-1 transition" />
+          <ArrowLeft
+            size={20}
+            className="group-hover:-translate-x-1 transition"
+          />
           Back to Menu
         </button>
 
-        {/* Main Content */}
+        {/* Admin Banner */}
+        {isAdmin && (
+          <div className="mb-6 bg-amber-100 border-l-4 border-amber-600 p-4 rounded-lg">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <svg
+                  className="h-5 w-5 text-amber-600"
+                  viewBox="0 0 20 20"
+                  fill="currentColor"
+                >
+                  <path
+                    fillRule="evenodd"
+                    d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z"
+                    clipRule="evenodd"
+                  />
+                </svg>
+              </div>
+              <div className="ml-3">
+                <p className="text-sm text-amber-800">
+                  <strong>Admin View Only</strong> - You are viewing as an
+                  administrator. Admin accounts cannot place orders.
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         <div className="grid lg:grid-cols-2 gap-8">
           {/* Image Gallery */}
           <div className="space-y-4">
@@ -149,35 +200,18 @@ const MenuItemDetail = () => {
                 className="w-full h-96 object-cover hover:scale-105 transition duration-500"
               />
             </div>
-            {item.gallery && item.gallery.length > 0 && (
-              <div className="flex gap-3 overflow-x-auto pb-2">
-                <img
-                  src={item.image}
-                  alt={item.name}
-                  onClick={() => setActiveImage(item.image)}
-                  className={`w-20 h-20 object-cover rounded-lg cursor-pointer transition border-2 ${activeImage === item.image ? 'border-amber-500' : 'border-transparent'}`}
-                />
-                {item.gallery?.map((img, idx) => (
-                  <img
-                    key={idx}
-                    src={img}
-                    alt={`${item.name} ${idx + 1}`}
-                    onClick={() => setActiveImage(img)}
-                    className={`w-20 h-20 object-cover rounded-lg cursor-pointer transition border-2 ${activeImage === img ? 'border-amber-500' : 'border-transparent'}`}
-                  />
-                ))}
-              </div>
-            )}
           </div>
 
           {/* Item Details */}
           <div className="space-y-6">
             {/* Category Badge */}
             <div className="flex items-center gap-3 flex-wrap">
-              <span className={`px-3 py-1 rounded-full text-sm font-semibold ${getCategoryColor(item.category)}`}>
+              <span
+                className={`px-3 py-1 rounded-full text-sm font-semibold ${getCategoryColor(item.category)}`}
+              >
                 {item.category}
               </span>
-              {item.isAvailable && !isOutOfStock && (
+              {item.isAvailable && !isOutOfStock && !isAdmin && (
                 <span className="flex items-center gap-1 text-green-600 bg-green-50 px-3 py-1 rounded-full text-sm">
                   <CheckCircle size={14} /> In Stock
                 </span>
@@ -190,20 +224,23 @@ const MenuItemDetail = () => {
             </div>
 
             {/* Title */}
-            <h1 className="text-4xl md:text-5xl font-bold text-gray-800">{item.name}</h1>
+            <h1 className="text-4xl md:text-5xl font-bold text-gray-800">
+              {item.name}
+            </h1>
 
             {/* Price */}
             <div className="flex items-baseline gap-2">
-              <span className="text-4xl font-bold text-amber-600">{item.price} ETB</span>
-              {item.oldPrice && (
-                <span className="text-lg text-gray-400 line-through">{item.oldPrice} ETB</span>
-              )}
+              <span className="text-4xl font-bold text-amber-600">
+                {item.price} ETB
+              </span>
             </div>
 
             {/* Description */}
             <div className="border-t border-b py-4">
               <h3 className="font-semibold text-gray-800 mb-2">Description</h3>
-              <p className="text-gray-600 leading-relaxed">{item.description}</p>
+              <p className="text-gray-600 leading-relaxed">
+                {item.description}
+              </p>
             </div>
 
             {/* Info Grid */}
@@ -212,7 +249,9 @@ const MenuItemDetail = () => {
                 <Package size={20} className="text-amber-600" />
                 <div>
                   <p className="text-xs text-gray-500">Available Quantity</p>
-                  <p className="font-semibold text-gray-800">{item.quantity} items</p>
+                  <p className="font-semibold text-gray-800">
+                    {item.quantity} items
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-xl">
@@ -224,8 +263,8 @@ const MenuItemDetail = () => {
               </div>
             </div>
 
-            {/* Quantity Selector */}
-            {!isOutOfStock && (
+            {/* Quantity Selector and Add to Cart - Only for non-admin */}
+            {!isAdmin && !isOutOfStock && (
               <div className="space-y-4">
                 <label className="font-semibold text-gray-800">Quantity</label>
                 <div className="flex items-center gap-4">
@@ -236,7 +275,9 @@ const MenuItemDetail = () => {
                   >
                     <Minus size={20} />
                   </button>
-                  <span className="text-2xl font-bold w-12 text-center">{quantity}</span>
+                  <span className="text-2xl font-bold w-12 text-center">
+                    {quantity}
+                  </span>
                   <button
                     onClick={increaseQuantity}
                     disabled={quantity >= item.quantity}
@@ -251,49 +292,69 @@ const MenuItemDetail = () => {
               </div>
             )}
 
-            {/* Add to Cart Button */}
-            <div className="space-y-3">
-              <button
-                onClick={handleAddToCart}
-                disabled={isOutOfStock}
-                className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition transform hover:scale-105 ${
-                  isOutOfStock
-                    ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                    : isAdded
-                    ? "bg-green-600 text-white"
-                    : "bg-amber-600 text-white hover:bg-amber-700"
-                }`}
-              >
-                {isAdded ? (
-                  <>
-                    <CheckCircle size={22} /> Added to Cart!
-                  </>
-                ) : isOutOfStock ? (
-                  "Out of Stock"
-                ) : (
-                  <>
-                    <ShoppingCart size={22} /> Add to Cart - {(item.price * quantity).toFixed(2)} ETB
-                  </>
+            {/* Add to Cart Button - Only for non-admin */}
+            {!isAdmin && (
+              <div className="space-y-3">
+                <button
+                  onClick={handleAddToCart}
+                  disabled={isOutOfStock}
+                  className={`w-full py-4 rounded-xl font-bold text-lg flex items-center justify-center gap-2 transition transform hover:scale-105 ${
+                    isOutOfStock
+                      ? "bg-gray-300 text-gray-500 cursor-not-allowed"
+                      : isAdded
+                        ? "bg-green-600 text-white"
+                        : "bg-amber-600 text-white hover:bg-amber-700"
+                  }`}
+                >
+                  {isAdded ? (
+                    <>
+                      <CheckCircle size={22} /> Added to Cart!
+                    </>
+                  ) : isOutOfStock ? (
+                    "Out of Stock"
+                  ) : (
+                    <>
+                      <ShoppingCart size={22} /> Add to Cart -{" "}
+                      {(item.price * quantity).toFixed(2)} ETB
+                    </>
+                  )}
+                </button>
+
+                {cartQuantity > 0 && (
+                  <p className="text-center text-sm text-amber-600">
+                    You have {cartQuantity} in your cart
+                  </p>
                 )}
-              </button>
+              </div>
+            )}
 
-              {cartQuantity > 0 && (
-                <p className="text-center text-sm text-amber-600">
-                  You have {cartQuantity} in your cart
+            {/* Admin Restriction Message */}
+            {isAdmin && (
+              <div className="bg-amber-50 rounded-xl p-6 text-center border-2 border-amber-200">
+                <div className="text-4xl mb-3">🔒</div>
+                <h3 className="font-bold text-amber-800 mb-2">
+                  Admin Restriction
+                </h3>
+                <p className="text-amber-700">
+                  Admin accounts cannot add items to cart or place orders.
                 </p>
-              )}
-            </div>
+                <p className="text-sm text-amber-600 mt-2">
+                  Please create or use a customer account to make purchases.
+                </p>
+              </div>
+            )}
 
-            {/* Additional Info */}
+            {/* Delivery Information - Always visible */}
             <div className="bg-amber-50 rounded-xl p-4 space-y-2">
               <h4 className="font-semibold text-gray-800 flex items-center gap-2">
                 <Truck size={18} className="text-amber-600" />
                 Delivery Information
               </h4>
               <p className="text-sm text-gray-600">
-                • Free delivery on orders over 500 ETB within Debre Berhan<br />
-                • Estimated delivery time: 30-45 minutes<br />
-                • Pickup available at our café location
+                • Free delivery on orders over 500 ETB within Debre Berhan
+                <br />
+                • Estimated delivery time: 30-45 minutes
+                <br />• Pickup available at our café location
               </p>
             </div>
 
@@ -306,14 +367,6 @@ const MenuItemDetail = () => {
                 <Share2 size={18} className="text-blue-500" /> Share
               </button>
             </div>
-          </div>
-        </div>
-
-        {/* Related Items Section */}
-        <div className="mt-16">
-          <h2 className="text-2xl font-bold text-gray-800 mb-6">You Might Also Like</h2>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {/* You can add related items here */}
           </div>
         </div>
       </div>

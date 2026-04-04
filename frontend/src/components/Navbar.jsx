@@ -1,4 +1,4 @@
-// frontend/src/components/Navbar.jsx
+// frontend/src/components/Navbar.jsx - Update the cart section
 import {
   ChevronDown,
   ClipboardList,
@@ -25,6 +25,9 @@ const Navbar = () => {
   const itemCount = cartItems.reduce((acc, item) => acc + item.qty, 0);
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const [showFeedback, setShowFeedback] = useState(false);
+  
+  // Check if user is admin
+  const isAdmin = userInfo?.role === "admin";
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -45,50 +48,40 @@ const Navbar = () => {
           <span>Yesekela Café</span>
         </Link>
 
-        {/* Center: Navigation Links - Grouped together */}
+        {/* Center: Navigation Links */}
         <div className="flex gap-6 items-center">
-          <Link
-            to="/about"
-            className="hover:text-amber-400 transition font-medium"
-          >
+          <Link to="/about" className="hover:text-amber-400 transition font-medium">
             About
           </Link>
-          <Link
-            to="/menu"
-            className="hover:text-amber-400 transition font-medium"
-          >
+          <Link to="/menu" className="hover:text-amber-400 transition font-medium">
             Menu
           </Link>
-          {userInfo && (
-            <Link
-              to="/myorders"
-              className="hover:text-amber-400 transition font-medium"
-            >
+          {userInfo && !isAdmin && (
+            <Link to="/myorders" className="hover:text-amber-400 transition font-medium">
               Orders
             </Link>
           )}
-          <Link
-            to="/contact"
-            className="hover:text-amber-400 transition font-medium"
-          >
+          <Link to="/contact" className="hover:text-amber-400 transition font-medium">
             Contact
           </Link>
         </div>
 
         {/* Right Side: Cart, Dark Mode, User Profile */}
         <div className="flex gap-4 items-center">
-          {/* Cart Icon */}
-          <Link
-            to="/cart"
-            className="relative p-2 rounded-full hover:bg-amber-800 transition"
-          >
-            <ShoppingCart size={22} />
-            {itemCount > 0 && (
-              <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                {itemCount}
-              </span>
-            )}
-          </Link>
+          {/* Cart Icon - Hide for admin */}
+          {!isAdmin && (
+            <Link
+              to="/cart"
+              className="relative p-2 rounded-full hover:bg-amber-800 transition"
+            >
+              <ShoppingCart size={22} />
+              {itemCount > 0 && (
+                <span className="absolute -top-1 -right-1 bg-red-500 text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                  {itemCount}
+                </span>
+              )}
+            </Link>
+          )}
 
           {/* Dark Mode Toggle */}
           <button
@@ -138,6 +131,17 @@ const Navbar = () => {
                     </Link>
                   )}
                   
+                  {/* Only show My Orders in dropdown for non-admin users */}
+                  {!isAdmin && (
+                    <Link
+                      to="/myorders"
+                      onClick={() => setIsDropdownOpen(false)}
+                      className="flex items-center gap-2 px-4 py-2 text-gray-700 hover:bg-amber-50 transition text-sm"
+                    >
+                      <ClipboardList size={16} /> My Orders
+                    </Link>
+                  )}
+                  
                   <hr className="my-1 border-gray-100" />
                   
                   <button
@@ -150,10 +154,7 @@ const Navbar = () => {
               )}
             </div>
           ) : (
-            <Link
-              to="/login"
-              className="hover:text-amber-400 transition font-medium"
-            >
+            <Link to="/login" className="hover:text-amber-400 transition font-medium">
               Login
             </Link>
           )}

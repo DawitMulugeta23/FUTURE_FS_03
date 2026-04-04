@@ -17,14 +17,22 @@ const getFrontendBaseUrl = () =>
 // @route   POST /api/orders
 exports.createOrder = async (req, res) => {
   try {
-    // PREVENT ADMINS FROM PLACING ORDERS
-    if (req.user.role === 'admin') {
+    if (!req.user.role === "admin") {
       return res.status(403).json({
         success: false,
-        error: "Admins cannot place orders. Please use a customer account for ordering."
+        error:
+          "admin cannot place orders. Please use a customer account for ordering.",
       });
     }
-    
+    // PREVENT ADMINS FROM PLACING ORDERS
+    if (req.user.role === "admin") {
+      return res.status(403).json({
+        success: false,
+        error:
+          "Admins cannot place orders. Please use a customer account for ordering.",
+      });
+    }
+
     const { orderItems, totalPrice } = req.body;
 
     if (!process.env.CHAPA_SECRET_KEY) {
@@ -39,7 +47,9 @@ exports.createOrder = async (req, res) => {
     }
 
     if (!totalPrice || Number(totalPrice) <= 0) {
-      return res.status(400).json({ success: false, error: "Invalid order total" });
+      return res
+        .status(400)
+        .json({ success: false, error: "Invalid order total" });
     }
 
     const tx_ref = `tx-yesekela-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
@@ -101,7 +111,10 @@ exports.createOrder = async (req, res) => {
     });
   } catch (err) {
     console.error("Create order error:", err.response?.data || err.message);
-    res.status(500).json({ success: false, error: err.response?.data?.message || err.message });
+    res.status(500).json({
+      success: false,
+      error: err.response?.data?.message || err.message,
+    });
   }
 };
 
@@ -165,7 +178,10 @@ exports.verifyPayment = async (req, res) => {
       `${frontendUrl}/order-success?status=failed&ref=${encodeURIComponent(tx_ref)}`,
     );
   } catch (err) {
-    console.error("Payment verification error:", err.response?.data || err.message);
+    console.error(
+      "Payment verification error:",
+      err.response?.data || err.message,
+    );
     return res.redirect(
       `${frontendUrl}/order-success?status=failed&ref=${encodeURIComponent(req.params.tx_ref)}`,
     );
