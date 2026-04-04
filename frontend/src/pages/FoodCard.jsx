@@ -4,10 +4,12 @@ import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/useCart";
+import { useTheme } from "../context/useTheme";
 
 const FoodCard = ({ food }) => {
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const { darkMode } = useTheme();
   const [quantity, setQuantity] = useState(1);
   const maxQuantity =
     typeof food.quantity === "number" && food.quantity >= 0
@@ -90,28 +92,31 @@ const FoodCard = ({ food }) => {
   return (
     <div
       onClick={handleCardClick}
-      className="cursor-pointer group overflow-hidden rounded-2xl bg-white shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl"
+      className={`cursor-pointer group overflow-hidden rounded-2xl shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl ${
+        darkMode ? "bg-gray-800" : "bg-white"
+      }`}
     >
-      <div className="relative h-48 overflow-hidden bg-amber-50">
+      <div
+        className={`relative h-48 overflow-hidden ${
+          darkMode ? "bg-gray-700" : "bg-amber-50"
+        }`}
+      >
         <img
           src={food.image}
           alt={food.name}
           className="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
         />
-        <span className="absolute right-3 top-3 rounded-full bg-white px-3 py-1 text-sm font-bold text-amber-900 shadow">
+        <span
+          className={`absolute right-3 top-3 rounded-full px-3 py-1 text-sm font-bold shadow-lg ${
+            darkMode ? "bg-gray-900 text-amber-400" : "bg-white text-amber-900"
+          }`}
+        >
           {food.price} ETB
         </span>
         {isOutOfStock && (
-          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+          <div className="absolute inset-0 bg-black/60 flex items-center justify-center">
             <span className="bg-red-500 text-white px-3 py-1 rounded-full text-sm font-bold">
               Out of Stock
-            </span>
-          </div>
-        )}
-        {isAdmin && (
-          <div className="absolute inset-0 bg-amber-900/80 flex items-center justify-center">
-            <span className="bg-amber-700 text-white px-3 py-1 rounded-full text-sm font-bold">
-              Admin View Only
             </span>
           </div>
         )}
@@ -119,38 +124,70 @@ const FoodCard = ({ food }) => {
 
       <div className="p-4">
         <div className="mb-3 flex items-start justify-between gap-2">
-          <div>
-            <h3 className="text-xl font-bold text-gray-800">{food.name}</h3>
-            <p className="mt-1 inline-block rounded-full bg-amber-100 px-2 py-1 text-xs font-semibold text-amber-800">
+          <div className="flex-1">
+            <h3
+              className={`text-xl font-bold transition-colors duration-300 ${
+                darkMode ? "text-white" : "text-gray-800"
+              }`}
+            >
+              {food.name}
+            </h3>
+            <p
+              className={`mt-1 inline-block rounded-full px-2 py-1 text-xs font-semibold transition-colors duration-300 ${
+                darkMode
+                  ? "bg-amber-900/50 text-amber-300"
+                  : "bg-amber-100 text-amber-800"
+              }`}
+            >
               {food.category || "Menu Item"}
             </p>
             {typeof food.quantity === "number" && !isAdmin && (
-              <p className="mt-2 text-xs font-medium text-gray-500">
+              <p
+                className={`mt-2 text-xs font-medium transition-colors duration-300 ${
+                  darkMode ? "text-gray-400" : "text-gray-500"
+                }`}
+              >
                 {food.quantity > 0
-                  ? `Available: ${food.quantity}`
-                  : "Out of stock"}
+                  ? `🍽️ Available: ${food.quantity}`
+                  : "❌ Out of stock"}
               </p>
             )}
           </div>
         </div>
 
-        <p className="mb-4 min-h-[40px] text-sm text-gray-500 line-clamp-2">
+        <p
+          className={`mb-4 min-h-[40px] text-sm line-clamp-2 transition-colors duration-300 ${
+            darkMode ? "text-gray-400" : "text-gray-500"
+          }`}
+        >
           {food.description}
         </p>
 
         {/* Only show ordering options for non-admin users */}
         {!isAdmin && (
           <>
-            <div className="mb-3 flex items-center justify-between rounded-xl bg-amber-50 px-3 py-2">
-              <span className="text-sm font-semibold text-gray-700">
-                Quantity
+            <div
+              className={`mb-3 flex items-center justify-between rounded-xl px-3 py-2 transition-colors duration-300 ${
+                darkMode ? "bg-gray-700" : "bg-amber-50"
+              }`}
+            >
+              <span
+                className={`text-sm font-semibold transition-colors duration-300 ${
+                  darkMode ? "text-gray-300" : "text-gray-700"
+                }`}
+              >
+                📦 Quantity
               </span>
               <div className="flex items-center gap-2">
                 <button
                   type="button"
                   onClick={decreaseQuantity}
                   disabled={isOutOfStock}
-                  className="rounded-lg bg-white p-1 text-amber-900 shadow-sm hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`rounded-lg p-1 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                    darkMode
+                      ? "bg-gray-600 text-gray-200 hover:bg-gray-500"
+                      : "bg-white text-amber-900 hover:bg-amber-100"
+                  }`}
                 >
                   <Minus size={16} />
                 </button>
@@ -162,13 +199,21 @@ const FoodCard = ({ food }) => {
                   onChange={handleQuantityChange}
                   onClick={(e) => e.stopPropagation()}
                   disabled={isOutOfStock}
-                  className="w-14 rounded-lg border border-amber-200 bg-white px-2 py-1 text-center text-sm font-semibold outline-none focus:border-amber-500 disabled:cursor-not-allowed disabled:bg-gray-100"
+                  className={`w-14 rounded-lg border px-2 py-1 text-center text-sm font-semibold outline-none focus:ring-2 focus:ring-amber-500 disabled:cursor-not-allowed disabled:opacity-50 transition-colors duration-300 ${
+                    darkMode
+                      ? "bg-gray-600 border-gray-500 text-white focus:border-amber-500"
+                      : "bg-white border-amber-200 text-gray-900 focus:border-amber-500"
+                  }`}
                 />
                 <button
                   type="button"
                   onClick={increaseQuantity}
                   disabled={isOutOfStock}
-                  className="rounded-lg bg-white p-1 text-amber-900 shadow-sm hover:bg-amber-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className={`rounded-lg p-1 shadow-sm transition-all disabled:opacity-50 disabled:cursor-not-allowed ${
+                    darkMode
+                      ? "bg-gray-600 text-gray-200 hover:bg-gray-500"
+                      : "bg-white text-amber-900 hover:bg-amber-100"
+                  }`}
                 >
                   <Plus size={16} />
                 </button>
@@ -178,22 +223,32 @@ const FoodCard = ({ food }) => {
             <button
               onClick={handleAddToCart}
               disabled={isOutOfStock}
-              className="flex w-full items-center justify-center gap-2 rounded-xl bg-amber-100 py-2 font-bold text-amber-900 transition hover:bg-amber-900 hover:text-white disabled:cursor-not-allowed disabled:bg-gray-200 disabled:text-gray-500"
+              className={`flex w-full items-center justify-center gap-2 rounded-xl py-2.5 font-bold transition-all transform hover:scale-[1.02] active:scale-[0.98] disabled:transform-none disabled:cursor-not-allowed disabled:opacity-50 ${
+                isOutOfStock
+                  ? "bg-gray-300 text-gray-500 dark:bg-gray-700 dark:text-gray-400"
+                  : darkMode
+                    ? "bg-amber-600 text-white hover:bg-amber-700"
+                    : "bg-amber-100 text-amber-900 hover:bg-amber-900 hover:text-white"
+              }`}
             >
-              <Plus size={18} /> {isOutOfStock ? "Out of Stock" : "Add to Cart"}
+              <Plus size={18} />
+              {isOutOfStock
+                ? "Out of Stock"
+                : `Add to Cart • ${(food.price * quantity).toFixed(0)} ETB`}
             </button>
           </>
         )}
 
-        {/* Show admin message instead of ordering options */}
+        {/* Admin message when logged in as admin */}
         {isAdmin && (
-          <div className="mt-3 p-3 bg-gray-100 rounded-xl text-center">
-            <p className="text-sm text-gray-600">
-              🔒 Admin accounts cannot place orders
-            </p>
-            <p className="text-xs text-gray-500 mt-1">
-              Switch to a customer account to order
-            </p>
+          <div
+            className={`mt-3 p-2 rounded-lg text-center text-xs transition-colors duration-300 ${
+              darkMode
+                ? "bg-gray-700 text-gray-400"
+                : "bg-gray-100 text-gray-500"
+            }`}
+          >
+            🔒 Admin accounts cannot place orders
           </div>
         )}
       </div>

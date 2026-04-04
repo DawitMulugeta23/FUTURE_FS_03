@@ -4,10 +4,12 @@ import { AlertCircle, Save, Trash2, Upload, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useNavigate, useParams } from "react-router-dom";
+import { useTheme } from "../../context/useTheme";
 
 const EditMenuItem = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { darkMode } = useTheme();
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [formData, setFormData] = useState({
@@ -124,34 +126,48 @@ const EditMenuItem = () => {
   if (loading) {
     return (
       <div className="flex justify-center items-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600"></div>
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600 dark:border-amber-500"></div>
       </div>
     );
   }
 
   return (
     <div className="max-w-4xl mx-auto">
-      <div className="bg-white rounded-2xl shadow p-6">
+      <div
+        className={`rounded-2xl shadow p-6 transition-colors duration-300 ${darkMode ? "bg-gray-800" : "bg-white"}`}
+      >
         {/* Header */}
-        <div className="flex justify-between items-center mb-6 pb-4 border-b">
+        <div
+          className={`flex justify-between items-center mb-6 pb-4 border-b ${darkMode ? "border-gray-700" : "border-gray-200"}`}
+        >
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Edit Menu Item</h2>
-            <p className="text-gray-500 text-sm mt-1">
+            <h2
+              className={`text-2xl font-bold transition-colors duration-300 ${darkMode ? "text-white" : "text-gray-800"}`}
+            >
+              Edit Menu Item
+            </h2>
+            <p
+              className={`text-sm mt-1 transition-colors duration-300 ${darkMode ? "text-gray-400" : "text-gray-500"}`}
+            >
               Update product information
             </p>
           </div>
-          <button
-            onClick={() => navigate("/admin/menu")}
-            className="p-2 hover:bg-gray-100 rounded-lg transition"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate("/admin/menu")}
+              className={`p-2 rounded-lg transition ${darkMode ? "hover:bg-gray-700 text-gray-400" : "hover:bg-gray-100 text-gray-600"}`}
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {/* Image Section */}
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-2">
+            <label
+              className={`block text-sm font-medium mb-2 transition-colors duration-300 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+            >
               Product Image
             </label>
             <div className="flex gap-4 items-start flex-wrap">
@@ -159,7 +175,7 @@ const EditMenuItem = () => {
                 <img
                   src={imagePreview || currentImage}
                   alt={formData.name}
-                  className="w-32 h-32 object-cover rounded-lg border"
+                  className={`w-32 h-32 object-cover rounded-lg border ${darkMode ? "border-gray-600" : "border-gray-200"}`}
                 />
                 {image && (
                   <button
@@ -168,14 +184,16 @@ const EditMenuItem = () => {
                       setImage(null);
                       setImagePreview("");
                     }}
-                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600"
+                    className="absolute -top-2 -right-2 p-1 bg-red-500 text-white rounded-full hover:bg-red-600 transition"
                   >
                     <X size={14} />
                   </button>
                 )}
               </div>
               <div className="flex-1">
-                <label className="flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer hover:bg-gray-50 transition w-fit">
+                <label
+                  className={`flex items-center gap-2 px-4 py-2 border rounded-lg cursor-pointer transition w-fit ${darkMode ? "border-gray-600 text-gray-300 hover:bg-gray-700" : "border-gray-300 text-gray-700 hover:bg-gray-50"}`}
+                >
                   <Upload size={18} />
                   <span className="text-sm">Change Image</span>
                   <input
@@ -185,7 +203,9 @@ const EditMenuItem = () => {
                     className="hidden"
                   />
                 </label>
-                <p className="text-xs text-gray-500 mt-2">
+                <p
+                  className={`text-xs mt-2 ${darkMode ? "text-gray-500" : "text-gray-500"}`}
+                >
                   Recommended: 800x600px, max 2MB
                 </p>
               </div>
@@ -195,7 +215,9 @@ const EditMenuItem = () => {
           {/* Form Fields */}
           <div className="grid md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+              >
                 Item Name *
               </label>
               <input
@@ -204,19 +226,21 @@ const EditMenuItem = () => {
                 value={formData.name}
                 onChange={handleChange}
                 required
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none transition-colors duration-300 ${darkMode ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500" : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"}`}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+              >
                 Category *
               </label>
               <select
                 name="category"
                 value={formData.category}
                 onChange={handleChange}
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${darkMode ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-gray-900"}`}
               >
                 <option value="Coffee">Coffee</option>
                 <option value="Pastry">Pastry</option>
@@ -226,7 +250,9 @@ const EditMenuItem = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+              >
                 Price (ETB) *
               </label>
               <input
@@ -237,12 +263,14 @@ const EditMenuItem = () => {
                 required
                 min="0"
                 step="0.01"
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${darkMode ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500" : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"}`}
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+              >
                 Quantity in Stock *
               </label>
               <input
@@ -252,12 +280,14 @@ const EditMenuItem = () => {
                 onChange={handleChange}
                 required
                 min="0"
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${darkMode ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500" : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"}`}
               />
             </div>
 
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label
+                className={`block text-sm font-medium mb-1 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+              >
                 Description *
               </label>
               <textarea
@@ -266,7 +296,7 @@ const EditMenuItem = () => {
                 onChange={handleChange}
                 required
                 rows={4}
-                className="w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500"
+                className={`w-full p-2 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${darkMode ? "bg-gray-700 border-gray-600 text-white focus:border-amber-500" : "bg-white border-gray-300 text-gray-900 focus:border-amber-500"}`}
               />
             </div>
 
@@ -277,9 +307,11 @@ const EditMenuItem = () => {
                   name="isAvailable"
                   checked={formData.isAvailable}
                   onChange={handleChange}
-                  className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500"
+                  className="w-4 h-4 text-amber-600 rounded focus:ring-amber-500 dark:bg-gray-700"
                 />
-                <span className="text-sm text-gray-700">
+                <span
+                  className={`text-sm ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                >
                   Item is available for sale
                 </span>
               </label>
@@ -288,16 +320,21 @@ const EditMenuItem = () => {
 
           {/* Warning for low stock */}
           {formData.quantity > 0 && formData.quantity <= 5 && (
-            <div className="flex items-center gap-2 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
-              <AlertCircle size={18} className="text-yellow-600" />
-              <p className="text-sm text-yellow-700">
+            <div className="flex items-center gap-2 p-3 bg-yellow-50 dark:bg-yellow-900/30 rounded-lg border border-yellow-200 dark:border-yellow-800">
+              <AlertCircle
+                size={18}
+                className="text-yellow-600 dark:text-yellow-500"
+              />
+              <p className="text-sm text-yellow-700 dark:text-yellow-400">
                 Low stock alert! Only {formData.quantity} items remaining.
               </p>
             </div>
           )}
 
           {/* Action Buttons */}
-          <div className="flex gap-3 pt-4 border-t">
+          <div
+            className={`flex gap-3 pt-4 border-t ${darkMode ? "border-gray-700" : "border-gray-200"}`}
+          >
             <button
               type="submit"
               disabled={submitting}
@@ -313,7 +350,7 @@ const EditMenuItem = () => {
             <button
               type="button"
               onClick={handleDelete}
-              className="px-6 py-2 border border-red-300 text-red-600 rounded-lg hover:bg-red-50 transition flex items-center gap-2"
+              className={`px-6 py-2 border rounded-lg transition flex items-center gap-2 ${darkMode ? "border-red-700 text-red-400 hover:bg-red-900/30" : "border-red-300 text-red-600 hover:bg-red-50"}`}
             >
               <Trash2 size={18} />
               Delete Item

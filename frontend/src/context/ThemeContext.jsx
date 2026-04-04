@@ -1,3 +1,4 @@
+// frontend/src/context/ThemeContext.jsx
 import { useEffect, useState } from "react";
 import ThemeContext from "./theme-context";
 
@@ -11,8 +12,10 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem("darkMode", JSON.stringify(darkMode));
     if (darkMode) {
       document.documentElement.classList.add("dark");
+      document.body.classList.add("dark:bg-gray-900");
     } else {
       document.documentElement.classList.remove("dark");
+      document.body.classList.remove("dark:bg-gray-900");
     }
   }, [darkMode]);
 

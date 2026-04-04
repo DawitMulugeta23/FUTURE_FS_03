@@ -1,4 +1,5 @@
-@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap');
+/* frontend/src/index.css */
+@import url("https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700;800&family=Poppins:wght@300;400;500;600;700&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -6,27 +7,32 @@
 
 @layer base {
   body {
-    @apply font-poppins text-gray-800 bg-coffee-50;
+    @apply font-poppins bg-amber-50 dark:bg-gray-900 text-gray-800 dark:text-gray-200 transition-colors duration-300;
   }
-  
-  h1, h2, h3, h4, h5, h6 {
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
     @apply font-playfair;
   }
 }
 
 @layer components {
   .glassmorphism {
-    @apply bg-white/10 backdrop-blur-md border border-white/20 shadow-xl;
+    @apply bg-white/10 dark:bg-gray-800/10 backdrop-blur-md border border-white/20 dark:border-gray-700/20 shadow-xl;
   }
-  
+
   .glass-card {
-    @apply bg-white/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30;
+    @apply bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm rounded-2xl shadow-lg border border-white/30 dark:border-gray-700/30;
   }
-  
+
   .gradient-text {
-    @apply bg-gradient-to-r from-coffee-600 to-coffee-400 bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-amber-600 to-amber-400 bg-clip-text text-transparent;
   }
-  
+
   .hover-scale {
     @apply transition-transform duration-300 hover:scale-105;
   }
@@ -37,13 +43,13 @@
 }
 
 ::-webkit-scrollbar-track {
-  @apply bg-coffee-100;
+  @apply bg-amber-100 dark:bg-gray-800;
 }
 
 ::-webkit-scrollbar-thumb {
-  @apply bg-coffee-400 rounded-full;
+  @apply bg-amber-400 dark:bg-amber-600 rounded-full;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  @apply bg-coffee-500;
+  @apply bg-amber-500 dark:bg-amber-500;
 }
