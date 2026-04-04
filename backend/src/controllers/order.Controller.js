@@ -171,6 +171,41 @@ exports.createOrder = async (req, res) => {
   }
 };
 
+// @route   DELETE /api/orders/:id
+exports.deleteOrder = async (req, res) => {
+  try {
+    const order = await Order.findById(req.params.id);
+
+    if (!order) {
+      return res.status(404).json({
+        success: false,
+        error: "Order not found",
+      });
+    }
+
+    // If order is paid, restore stock before deleting
+    if (order.isPaid) {
+      for (const item of order.orderItems) {
+        await Food.findByIdAndUpdate(item.product, {
+          $inc: { quantity: item.quantity },
+        });
+      }
+    }
+
+    await order.deleteOne();
+
+    res.status(200).json({
+      success: true,
+      message: "Order deleted successfully",
+    });
+  } catch (err) {
+    console.error("Delete order error:", err);
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+};
 // @desc    Verify Chapa payment
 // @route   GET /api/orders/verify/:tx_ref
 exports.verifyPayment = async (req, res) => {

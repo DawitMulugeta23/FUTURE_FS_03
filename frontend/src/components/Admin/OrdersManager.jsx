@@ -6,11 +6,13 @@ import {
   Eye,
   Package,
   RefreshCw,
+  Trash2,
   XCircle,
 } from "lucide-react";
 import { useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { useTheme } from "../../context/useTheme";
+import { showConfirm } from "../../utils/showConfirm";
 
 const OrdersManager = () => {
   const [orders, setOrders] = useState([]);
@@ -34,16 +36,12 @@ const OrdersManager = () => {
         return;
       }
 
-      console.log("Fetching orders with token...");
-
       const response = await axios.get("http://localhost:5000/api/orders", {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
       });
-
-      console.log("Orders response:", response.data);
 
       if (response.data && response.data.success) {
         setOrders(response.data.data || []);
@@ -52,7 +50,6 @@ const OrdersManager = () => {
       }
     } catch (err) {
       console.error("Error fetching orders:", err);
-      console.error("Error response:", err.response?.data);
       toast.error(err.response?.data?.message || "Failed to fetch orders");
       setOrders([]);
     } finally {
@@ -74,6 +71,37 @@ const OrdersManager = () => {
       console.error("Error updating order status:", err);
       toast.error(err.response?.data?.error || "Failed to update order status");
     }
+  };
+
+  // ✅ Updated delete order function with toast confirmation
+  const deleteOrder = async (orderId, orderName = "") => {
+    showConfirm(
+      `Are you sure you want to delete order ${orderName ? `#${orderName}` : ""}? This action cannot be undone.`,
+      async () => {
+        try {
+          const token = localStorage.getItem("token");
+          await axios.delete(`http://localhost:5000/api/orders/${orderId}`, {
+            headers: { Authorization: `Bearer ${token}` },
+          });
+          toast.success("Order deleted successfully");
+          fetchOrders(); // Refresh the list
+
+          // Close modal if open
+          if (showModal) {
+            setShowModal(false);
+            setSelectedOrder(null);
+          }
+        } catch (err) {
+          console.error("Error deleting order:", err);
+          toast.error(err.response?.data?.error || "Failed to delete order");
+        }
+      },
+      () => {
+        // Cancel callback - do nothing, just close
+        console.log("Delete cancelled");
+      },
+      true, // Danger mode (red)
+    );
   };
 
   const viewOrderDetails = async (orderId) => {
@@ -302,6 +330,15 @@ const OrdersManager = () => {
                             <option value="Delivered">Delivered</option>
                             <option value="Cancelled">Cancelled</option>
                           </select>
+                          <button
+                            onClick={() =>
+                              deleteOrder(order._id, order._id?.slice(-6))
+                            }
+                            className="p-1 text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-900/30 rounded transition"
+                            title="Delete Order"
+                          >
+                            <Trash2 size={18} />
+                          </button>
                         </div>
                       </td>
                     </tr>
@@ -438,6 +475,27 @@ const OrdersManager = () => {
                       {selectedOrder.totalPrice} ETB
                     </p>
                   </div>
+                </div>
+
+                <div className="flex justify-end gap-3 pt-4">
+                  <button
+                    onClick={() =>
+                      deleteOrder(
+                        selectedOrder._id,
+                        selectedOrder._id?.slice(-6),
+                      )
+                    }
+                    className="flex items-center gap-2 px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition"
+                  >
+                    <Trash2 size={18} />
+                    Delete Order
+                  </button>
+                  <button
+                    onClick={() => setShowModal(false)}
+                    className="px-4 py-2 border border-gray-300 rounded-lg hover:bg-gray-50 transition"
+                  >
+                    Close
+                  </button>
                 </div>
               </div>
             </div>

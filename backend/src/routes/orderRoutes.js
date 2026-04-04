@@ -9,10 +9,11 @@ const {
   updateOrderStatus,
   getOrderDetails,
   getAdminStats,
+  deleteOrder, // ✅ Add this import
 } = require("../controllers/order.controller");
 const { protect, authorize } = require("../middleware/authMiddleware");
 
-// Public routes (no authentication needed for payment verification)
+// Public routes
 router.get("/verify/:tx_ref", verifyPayment);
 
 // Protected routes (require login)
@@ -24,5 +25,6 @@ router.get("/stats", protect, authorize("admin"), getAdminStats);
 router.get("/", protect, authorize("admin"), getAllOrders);
 router.get("/:id", protect, authorize("admin"), getOrderDetails);
 router.put("/:id/status", protect, authorize("admin"), updateOrderStatus);
+router.delete("/:id", protect, authorize("admin"), deleteOrder); 
 
 module.exports = router;
