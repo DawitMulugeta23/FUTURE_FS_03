@@ -25,6 +25,7 @@ const FoodCard = ({ food, onLikeUpdate }) => {
   const [likeCount, setLikeCount] = useState(food.likeCount || 0);
   const [isLiking, setIsLiking] = useState(false);
   const [isFirstOrderEligible, setIsFirstOrderEligible] = useState(false);
+  const [checkingDiscount, setCheckingDiscount] = useState(true);
 
   const maxQuantity =
     typeof food.quantity === "number" && food.quantity >= 0
@@ -54,14 +55,27 @@ const FoodCard = ({ food, onLikeUpdate }) => {
     ? (currentPrice * 0.97).toFixed(2)
     : currentPrice;
 
+  // Check discount eligibility whenever component mounts or user returns to page
   useEffect(() => {
     checkDiscountEligibility();
+
+    // Listen for storage events (in case user info changes in another tab)
+    const handleStorageChange = () => {
+      checkDiscountEligibility();
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, []);
 
   const checkDiscountEligibility = async () => {
     try {
       const token = localStorage.getItem("token");
       if (!token) {
+        setCheckingDiscount(false);
         return;
       }
 
@@ -77,6 +91,8 @@ const FoodCard = ({ food, onLikeUpdate }) => {
       }
     } catch (error) {
       console.error("Error checking discount:", error);
+    } finally {
+      setCheckingDiscount(false);
     }
   };
 
@@ -276,6 +292,15 @@ const FoodCard = ({ food, onLikeUpdate }) => {
   };
 
   const PriceDisplay = () => {
+    // Don't show discount while checking
+    if (checkingDiscount) {
+      return (
+        <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+          {currentPrice} ETB
+        </span>
+      );
+    }
+
     if (showFirstOrderDiscount) {
       return (
         <div className="flex items-center gap-2 flex-wrap">
@@ -327,6 +352,49 @@ const FoodCard = ({ food, onLikeUpdate }) => {
       </span>
     );
   };
+
+  // If still checking discount, show regular price
+  if (checkingDiscount) {
+    return (
+      <div
+        onClick={handleCardClick}
+        className={`cursor-pointer group overflow-hidden rounded-2xl shadow-md transition-all duration-300 hover:-translate-y-1 hover:shadow-xl flex flex-col h-full ${
+          darkMode ? "bg-gray-800" : "bg-white"
+        }`}
+      >
+        <div
+          className={`relative h-48 overflow-hidden ${
+            darkMode ? "bg-gray-700" : "bg-amber-50"
+          }`}
+        >
+          <img
+            src={food.image}
+            alt={food.name}
+            className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
+          />
+        </div>
+        <div className="p-4 flex flex-col flex-1">
+          <div className="animate-pulse">
+            <div
+              className={`h-5 w-3/4 rounded ${darkMode ? "bg-gray-700" : "bg-gray-200"} mb-2`}
+            ></div>
+            <div
+              className={`h-4 w-1/2 rounded ${darkMode ? "bg-gray-700" : "bg-gray-200"} mb-3`}
+            ></div>
+            <div
+              className={`h-4 w-full rounded ${darkMode ? "bg-gray-700" : "bg-gray-200"} mb-2`}
+            ></div>
+            <div
+              className={`h-4 w-2/3 rounded ${darkMode ? "bg-gray-700" : "bg-gray-200"} mb-4`}
+            ></div>
+            <div
+              className={`h-6 w-1/3 rounded ${darkMode ? "bg-gray-700" : "bg-gray-200"}`}
+            ></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
