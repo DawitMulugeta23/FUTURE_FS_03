@@ -6,19 +6,21 @@ import {
   Clock,
   Coffee,
   Edit,
-  Heart,
   Minus,
   Package,
   Plus,
-  Share2,
   ShoppingCart,
-  Truck,
+  Star,
+  ThumbsDown,
+  ThumbsUp,
+  X,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { useCart } from "../context/useCart";
 import { useTheme } from "../context/useTheme";
+import FoodCard from "../pages/FoodCard";
 
 const MenuItemDetail = () => {
   const { id } = useParams();
@@ -30,30 +32,78 @@ const MenuItemDetail = () => {
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState("");
   const [isAdded, setIsAdded] = useState(false);
+  const [relatedProducts, setRelatedProducts] = useState([]);
+  const [loadingRelated, setLoadingRelated] = useState(true);
+
+  // Rating and like states
+  const [userRating, setUserRating] = useState(null);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [ratingReview, setRatingReview] = useState("");
+  const [showRatingModal, setShowRatingModal] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [isDisliked, setIsDisliked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [dislikeCount, setDislikeCount] = useState(0);
+  const [averageRating, setAverageRating] = useState(0);
+  const [totalRatings, setTotalRatings] = useState(0);
+  const [isSubmittingRating, setIsSubmittingRating] = useState(false);
+  const [isTogglingLike, setIsTogglingLike] = useState(false);
 
   // Check if user is logged in and admin
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const isLoggedIn = !!userInfo;
   const isAdmin = userInfo?.role === "admin";
 
-  // Show add to cart only for logged-in non-admin users
   const canAddToCart = isLoggedIn && !isAdmin;
 
   useEffect(() => {
     fetchMenuItem();
+    fetchRelatedProducts();
   }, [id]);
 
   const fetchMenuItem = async () => {
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/food/${id}`);
+      const token = localStorage.getItem("token");
+      const config = token
+        ? { headers: { Authorization: `Bearer ${token}` } }
+        : {};
+      const { data } = await axios.get(
+        `http://localhost:5000/api/food/${id}`,
+        config,
+      );
       setItem(data.data);
       setActiveImage(data.data.image);
+      setIsLiked(data.userLiked || false);
+      setIsDisliked(data.userDisliked || false);
+      setLikeCount(data.data.likeCount || 0);
+      setDislikeCount(data.data.dislikeCount || 0);
+      setAverageRating(data.data.averageRating || 0);
+      setTotalRatings(data.data.totalRatings || 0);
+      setUserRating(data.userRating || null);
     } catch (error) {
       console.error("Error fetching menu item:", error);
       toast.error("Menu item not found");
       navigate("/menu");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchRelatedProducts = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      const config = token
+        ? { headers: { Authorization: `Bearer ${token}` } }
+        : {};
+      const { data } = await axios.get(
+        `http://localhost:5000/api/food/${id}/related`,
+        config,
+      );
+      setRelatedProducts(data.data);
+    } catch (error) {
+      console.error("Error fetching related products:", error);
+    } finally {
+      setLoadingRelated(false);
     }
   };
 
@@ -128,6 +178,118 @@ const MenuItemDetail = () => {
     navigate(`/admin/menu/edit/${item._id}`);
   };
 
+  // Handle like
+  const handleLike = async () => {
+    if (!isLoggedIn) {
+      toast.error("Please login to like items");
+      navigate("/login");
+      return;
+    }
+
+    if (isAdmin) {
+      toast.error("Admin accounts cannot like items");
+      return;
+    }
+
+    setIsTogglingLike(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `http://localhost:5000/api/food/${item._id}/like`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      if (response.data.success) {
+        setIsLiked(!isLiked);
+        if (!isLiked && isDisliked) setIsDisliked(false);
+        setLikeCount(response.data.data.likeCount);
+        setDislikeCount(response.data.data.dislikeCount);
+        toast.success(response.data.message);
+      }
+    } catch (error) {
+      console.error("Like error:", error);
+      toast.error("Failed to update like");
+    } finally {
+      setIsTogglingLike(false);
+    }
+  };
+
+  // Handle dislike
+  const handleDislike = async () => {
+    if (!isLoggedIn) {
+      toast.error("Please login to dislike items");
+      navigate("/login");
+      return;
+    }
+
+    if (isAdmin) {
+      toast.error("Admin accounts cannot dislike items");
+      return;
+    }
+
+    setIsTogglingLike(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `http://localhost:5000/api/food/${item._id}/dislike`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      if (response.data.success) {
+        setIsDisliked(!isDisliked);
+        if (!isDisliked && isLiked) setIsLiked(false);
+        setLikeCount(response.data.data.likeCount);
+        setDislikeCount(response.data.data.dislikeCount);
+        toast.success(response.data.message);
+      }
+    } catch (error) {
+      console.error("Dislike error:", error);
+      toast.error("Failed to update dislike");
+    } finally {
+      setIsTogglingLike(false);
+    }
+  };
+
+  // Handle rating submission
+  const handleSubmitRating = async () => {
+    if (!userRating && hoverRating === 0) {
+      toast.error("Please select a rating");
+      return;
+    }
+
+    const finalRating = userRating || hoverRating;
+
+    setIsSubmittingRating(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `http://localhost:5000/api/food/${item._id}/rate`,
+        { rating: finalRating, review: ratingReview },
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      if (response.data.success) {
+        setAverageRating(response.data.data.averageRating);
+        setTotalRatings(response.data.data.totalRatings);
+        setUserRating(finalRating);
+        toast.success(response.data.message);
+        setShowRatingModal(false);
+        setRatingReview("");
+        setHoverRating(0);
+      }
+    } catch (error) {
+      console.error("Rating error:", error);
+      toast.error("Failed to submit rating");
+    } finally {
+      setIsSubmittingRating(false);
+    }
+  };
+
   const getCategoryColor = (category) => {
     const colors = {
       Coffee:
@@ -140,6 +302,37 @@ const MenuItemDetail = () => {
     return (
       colors[category] ||
       "bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+    );
+  };
+
+  // Render stars for display
+  const renderStars = (rating, size = 16) => {
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    return (
+      <div className="flex items-center gap-0.5">
+        {[...Array(fullStars)].map((_, i) => (
+          <Star
+            key={`full-${i}`}
+            size={size}
+            className="fill-yellow-400 text-yellow-400"
+          />
+        ))}
+        {hasHalfStar && (
+          <Star
+            size={size}
+            className="fill-yellow-400 text-yellow-400 opacity-50"
+          />
+        )}
+        {[...Array(5 - fullStars - (hasHalfStar ? 1 : 0))].map((_, i) => (
+          <Star
+            key={`empty-${i}`}
+            size={size}
+            className="text-gray-300 dark:text-gray-600"
+          />
+        ))}
+      </div>
     );
   };
 
@@ -289,12 +482,77 @@ const MenuItemDetail = () => {
               {item.name}
             </h1>
 
+            {/* Rating Display */}
+            <div className="flex items-center gap-3">
+              {renderStars(averageRating, 20)}
+              <span
+                className={`text-sm ${darkMode ? "text-gray-400" : "text-gray-500"}`}
+              >
+                ({totalRatings} {totalRatings === 1 ? "review" : "reviews"})
+              </span>
+              {isLoggedIn && !isAdmin && (
+                <button
+                  onClick={() => setShowRatingModal(true)}
+                  className="text-sm text-amber-600 dark:text-amber-400 hover:underline"
+                >
+                  {userRating ? "Update Rating" : "Rate this item"}
+                </button>
+              )}
+            </div>
+
+            {/* Like/Dislike Buttons */}
+            {isLoggedIn && !isAdmin && (
+              <div className="flex items-center gap-4">
+                <button
+                  onClick={handleLike}
+                  disabled={isTogglingLike}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition ${
+                    isLiked
+                      ? "bg-red-500 text-white"
+                      : darkMode
+                        ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  <ThumbsUp size={16} />
+                  <span>{likeCount}</span>
+                </button>
+                <button
+                  onClick={handleDislike}
+                  disabled={isTogglingLike}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full transition ${
+                    isDisliked
+                      ? "bg-gray-500 text-white"
+                      : darkMode
+                        ? "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  }`}
+                >
+                  <ThumbsDown size={16} />
+                  <span>{dislikeCount}</span>
+                </button>
+              </div>
+            )}
+
             {/* Price */}
             <div className="flex items-baseline gap-2">
               <span className="text-4xl font-bold text-amber-600 dark:text-amber-500">
                 {item.price} ETB
               </span>
+              {item.originalPrice && item.originalPrice > item.price && (
+                <span className="text-lg text-gray-400 line-through">
+                  {item.originalPrice} ETB
+                </span>
+              )}
             </div>
+
+            {/* Sold Count */}
+            {item.soldCount > 0 && (
+              <div className="flex items-center gap-2 text-sm text-green-600 dark:text-green-400">
+                <ShoppingCart size={16} />
+                <span>{item.soldCount} items sold</span>
+              </div>
+            )}
 
             {/* Description */}
             <div
@@ -374,7 +632,7 @@ const MenuItemDetail = () => {
               </div>
             </div>
 
-            {/* Quantity Selector and Add to Cart - Only for logged-in non-admin users */}
+            {/* Quantity Selector and Add to Cart */}
             {canAddToCart && !isOutOfStock && (
               <div className="space-y-4">
                 <label
@@ -425,7 +683,7 @@ const MenuItemDetail = () => {
               </div>
             )}
 
-            {/* Add to Cart Button - Only for logged-in non-admin users */}
+            {/* Add to Cart Button */}
             {canAddToCart && (
               <div className="space-y-3">
                 <button
@@ -461,7 +719,7 @@ const MenuItemDetail = () => {
               </div>
             )}
 
-            {/* Login Prompt for Non-Logged Users */}
+            {/* Login Prompt */}
             {!isLoggedIn && (
               <div
                 className={`rounded-xl p-6 text-center transition-colors duration-300 ${
@@ -492,7 +750,7 @@ const MenuItemDetail = () => {
               </div>
             )}
 
-            {/* Admin Restriction Message */}
+            {/* Admin Restriction */}
             {isLoggedIn && isAdmin && (
               <div
                 className={`rounded-xl p-6 text-center border transition-colors duration-300 ${
@@ -518,62 +776,158 @@ const MenuItemDetail = () => {
                 </p>
               </div>
             )}
-
-            {/* Delivery Information */}
-            <div
-              className={`rounded-xl p-4 space-y-2 transition-colors duration-300 ${
-                darkMode ? "bg-gray-800" : "bg-amber-50"
-              }`}
-            >
-              <h4
-                className={`font-semibold flex items-center gap-2 transition-colors duration-300 ${
-                  darkMode ? "text-gray-300" : "text-gray-800"
-                }`}
-              >
-                <Truck
-                  size={18}
-                  className="text-amber-600 dark:text-amber-500"
-                />
-                Delivery Information
-              </h4>
-              <p
-                className={`text-sm transition-colors duration-300 ${
-                  darkMode ? "text-gray-400" : "text-gray-600"
-                }`}
-              >
-                • Free delivery on orders over 500 ETB within Debre Berhan
-                <br />
-                • Estimated delivery time: 30-45 minutes
-                <br />• Pickup available at our café location
-              </p>
-            </div>
-
-            {/* Share Buttons - Only for logged-in users */}
-            {isLoggedIn && !isAdmin && (
-              <div className="flex gap-3 pt-4">
-                <button
-                  className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition ${
-                    darkMode
-                      ? "border-gray-700 text-gray-400 hover:bg-gray-800"
-                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <Heart size={18} className="text-red-500" /> Save
-                </button>
-                <button
-                  className={`flex items-center gap-2 px-4 py-2 border rounded-lg transition ${
-                    darkMode
-                      ? "border-gray-700 text-gray-400 hover:bg-gray-800"
-                      : "border-gray-200 text-gray-600 hover:bg-gray-50"
-                  }`}
-                >
-                  <Share2 size={18} className="text-blue-500" /> Share
-                </button>
-              </div>
-            )}
           </div>
         </div>
+
+        {/* Related Products Section */}
+        {!loadingRelated && relatedProducts.length > 0 && (
+          <div className="mt-16">
+            <div className="flex items-center justify-between mb-6">
+              <h2
+                className={`text-2xl font-bold transition-colors duration-300 ${
+                  darkMode ? "text-white" : "text-gray-800"
+                }`}
+              >
+                You May Also Like
+              </h2>
+              <Link
+                to="/menu"
+                className={`text-sm transition-colors duration-300 ${
+                  darkMode
+                    ? "text-amber-400 hover:text-amber-300"
+                    : "text-amber-600 hover:text-amber-700"
+                }`}
+              >
+                View All Menu →
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {relatedProducts.map((product) => (
+                <FoodCard
+                  key={product._id}
+                  food={product}
+                  onLikeUpdate={(productId, data) => {
+                    // Update related product like count in state
+                    setRelatedProducts((prev) =>
+                      prev.map((p) =>
+                        p._id === productId
+                          ? {
+                              ...p,
+                              likeCount: data.likeCount,
+                              userLiked: data.action === "liked",
+                            }
+                          : p,
+                      ),
+                    );
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* Rating Modal */}
+      {showRatingModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div
+            className={`rounded-2xl max-w-md w-full p-6 transition-colors duration-300 ${
+              darkMode ? "bg-gray-800" : "bg-white"
+            }`}
+          >
+            <div className="flex justify-between items-center mb-4">
+              <h3
+                className={`text-xl font-bold transition-colors duration-300 ${
+                  darkMode ? "text-white" : "text-gray-800"
+                }`}
+              >
+                Rate {item.name}
+              </h3>
+              <button
+                onClick={() => setShowRatingModal(false)}
+                className={`p-1 rounded-full transition ${
+                  darkMode ? "hover:bg-gray-700" : "hover:bg-gray-100"
+                }`}
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Star Rating */}
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                >
+                  Your Rating
+                </label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setUserRating(star)}
+                      onMouseEnter={() => setHoverRating(star)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className="focus:outline-none"
+                    >
+                      <Star
+                        size={32}
+                        className={`transition-colors ${
+                          star <= (hoverRating || userRating || 0)
+                            ? "fill-yellow-400 text-yellow-400"
+                            : "text-gray-300 dark:text-gray-600"
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Review Text */}
+              <div>
+                <label
+                  className={`block text-sm font-medium mb-2 ${darkMode ? "text-gray-300" : "text-gray-700"}`}
+                >
+                  Your Review (Optional)
+                </label>
+                <textarea
+                  value={ratingReview}
+                  onChange={(e) => setRatingReview(e.target.value)}
+                  rows={3}
+                  placeholder="Tell us what you think about this item..."
+                  className={`w-full p-3 border rounded-lg focus:ring-2 focus:ring-amber-500 outline-none ${
+                    darkMode
+                      ? "bg-gray-700 border-gray-600 text-white placeholder-gray-400"
+                      : "bg-white border-gray-300 text-gray-900"
+                  }`}
+                />
+              </div>
+
+              <div className="flex gap-3 pt-2">
+                <button
+                  onClick={handleSubmitRating}
+                  disabled={isSubmittingRating}
+                  className="flex-1 bg-amber-600 text-white py-2 rounded-lg hover:bg-amber-700 transition disabled:opacity-50"
+                >
+                  {isSubmittingRating ? "Submitting..." : "Submit Rating"}
+                </button>
+                <button
+                  onClick={() => setShowRatingModal(false)}
+                  className={`flex-1 border py-2 rounded-lg transition ${
+                    darkMode
+                      ? "border-gray-600 text-gray-300 hover:bg-gray-700"
+                      : "border-gray-300 text-gray-700 hover:bg-gray-50"
+                  }`}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1,3 +1,4 @@
+// backend/src/routes/food.Routes.js
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
@@ -13,6 +14,13 @@ const {
   toggleAvailability,
   getAllMenuForAdmin,
   getLowStockItems,
+  rateFood,
+  toggleLike,
+  toggleDislike,
+  getTopRated,
+  getMostLiked,
+  getBestSelling,
+  getRelatedProducts, // ADD THIS
 } = require("../controllers/food.Controller");
 const { protect, authorize } = require("../middleware/authMiddleware");
 
@@ -42,7 +50,16 @@ const upload = multer({
 
 // Public routes (no auth needed for viewing menu)
 router.get("/", getMenu);
+router.get("/top-rated", getTopRated);
+router.get("/most-liked", getMostLiked);
+router.get("/best-selling", getBestSelling);
 router.get("/:id", getFoodById);
+router.get("/:id/related", getRelatedProducts); // ADD THIS ROUTE
+
+// Protected routes (require login for interactions)
+router.post("/:id/rate", protect, rateFood);
+router.post("/:id/like", protect, toggleLike);
+router.post("/:id/dislike", protect, toggleDislike);
 
 // Admin only routes
 router.get("/admin/all", protect, authorize("admin"), getAllMenuForAdmin);

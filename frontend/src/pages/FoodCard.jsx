@@ -1,8 +1,11 @@
 // frontend/src/components/FoodCard.jsx
+import axios from "axios";
 import {
+  Heart,
   Minus,
   Plus,
   ShoppingBag,
+  Star,
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
@@ -12,12 +15,16 @@ import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/useCart";
 import { useTheme } from "../context/useTheme";
 
-const FoodCard = ({ food }) => {
+const FoodCard = ({ food, onLikeUpdate }) => {
   const { addToCart, buyNow } = useCart();
   const navigate = useNavigate();
   const { darkMode } = useTheme();
   const [quantity, setQuantity] = useState(1);
   const [buyingNow, setBuyingNow] = useState(false);
+  const [isLiked, setIsLiked] = useState(food.userLiked || false);
+  const [likeCount, setLikeCount] = useState(food.likeCount || 0);
+  const [isLiking, setIsLiking] = useState(false);
+
   const maxQuantity =
     typeof food.quantity === "number" && food.quantity >= 0
       ? food.quantity
@@ -38,6 +45,48 @@ const FoodCard = ({ food }) => {
     ? Math.round(((originalPrice - currentPrice) / originalPrice) * 100)
     : 0;
   const isPriceIncreased = originalPrice < currentPrice;
+
+  // Handle like/unlike
+  const handleLike = async (e) => {
+    e.stopPropagation();
+
+    if (!isLoggedIn) {
+      toast.error("Please login to like items");
+      navigate("/login");
+      return;
+    }
+
+    if (isAdmin) {
+      toast.error("Admin accounts cannot like items");
+      return;
+    }
+
+    setIsLiking(true);
+
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `http://localhost:5000/api/food/${food._id}/like`,
+        {},
+        { headers: { Authorization: `Bearer ${token}` } },
+      );
+
+      if (response.data.success) {
+        setIsLiked(!isLiked);
+        setLikeCount(response.data.data.likeCount);
+        toast.success(response.data.message);
+
+        if (onLikeUpdate) {
+          onLikeUpdate(food._id, response.data.data);
+        }
+      }
+    } catch (error) {
+      console.error("Like error:", error);
+      toast.error("Failed to update like");
+    } finally {
+      setIsLiking(false);
+    }
+  };
 
   const handleAddToCart = async (e) => {
     e.stopPropagation();
@@ -144,6 +193,43 @@ const FoodCard = ({ food }) => {
     navigate(`/menu/${food._id}`);
   };
 
+  // Render stars for rating
+  const renderStars = () => {
+    const rating = food.averageRating || 0;
+    const fullStars = Math.floor(rating);
+    const hasHalfStar = rating % 1 >= 0.5;
+
+    return (
+      <div className="flex items-center gap-0.5">
+        {[...Array(fullStars)].map((_, i) => (
+          <Star
+            key={`full-${i}`}
+            size={14}
+            className="fill-yellow-400 text-yellow-400"
+          />
+        ))}
+        {hasHalfStar && (
+          <Star
+            size={14}
+            className="fill-yellow-400 text-yellow-400 opacity-50"
+          />
+        )}
+        {[...Array(5 - fullStars - (hasHalfStar ? 1 : 0))].map((_, i) => (
+          <Star
+            key={`empty-${i}`}
+            size={14}
+            className="text-gray-300 dark:text-gray-600"
+          />
+        ))}
+        {food.totalRatings > 0 && (
+          <span className="text-xs ml-1 text-gray-500 dark:text-gray-400">
+            ({food.totalRatings})
+          </span>
+        )}
+      </div>
+    );
+  };
+
   return (
     <div
       onClick={handleCardClick}
@@ -163,6 +249,32 @@ const FoodCard = ({ food }) => {
           className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
         />
 
+        {/* Like Button */}
+        {isLoggedIn && !isAdmin && (
+          <button
+            onClick={handleLike}
+            disabled={isLiking}
+            className="absolute right-3 top-3 bg-white/90 dark:bg-gray-800/90 p-2 rounded-full shadow-md hover:scale-110 transition z-10 disabled:opacity-50"
+          >
+            <Heart
+              size={18}
+              className={
+                isLiked
+                  ? "fill-red-500 text-red-500"
+                  : "text-gray-500 dark:text-gray-400"
+              }
+            />
+          </button>
+        )}
+
+        {/* Sold Count Badge */}
+        {food.soldCount > 0 && (
+          <div className="absolute left-3 bottom-3 bg-black/60 text-white px-2 py-1 rounded-lg text-xs font-bold z-10 flex items-center gap-1">
+            <ShoppingBag size={12} />
+            {food.soldCount} sold
+          </div>
+        )}
+
         {/* Discount Badge */}
         {hasDiscount && !isOutOfStock && (
           <div className="absolute left-3 top-3 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold z-10 flex items-center gap-1">
@@ -174,7 +286,6 @@ const FoodCard = ({ food }) => {
         {isPriceIncreased && !hasDiscount && !isOutOfStock && (
           <div className="absolute left-3 top-3 bg-orange-500 text-white px-2 py-1 rounded-lg text-xs font-bold z-10 flex items-center gap-1">
             <TrendingUp size={12} />
-            Price Updated
           </div>
         )}
 
@@ -197,16 +308,30 @@ const FoodCard = ({ food }) => {
           >
             {food.name}
           </h3>
-          <p
-            className={`mt-1 inline-block rounded-full px-2 py-0.5 text-xs font-semibold transition-colors duration-300 ${
-              darkMode
-                ? "bg-amber-900/50 text-amber-300"
-                : "bg-amber-100 text-amber-800"
-            }`}
-          >
-            {food.category || "Menu Item"}
-          </p>
+          <div className="flex items-center justify-between mt-1">
+            <p
+              className={`inline-block rounded-full px-2 py-0.5 text-xs font-semibold transition-colors duration-300 ${
+                darkMode
+                  ? "bg-amber-900/50 text-amber-300"
+                  : "bg-amber-100 text-amber-800"
+              }`}
+            >
+              {food.category || "Menu Item"}
+            </p>
+            {renderStars()}
+          </div>
         </div>
+
+        {/* Like count display */}
+        {likeCount > 0 && (
+          <div className="flex items-center gap-1 mb-2 text-xs text-gray-500 dark:text-gray-400">
+            <Heart
+              size={12}
+              className={isLiked ? "fill-red-500 text-red-500" : ""}
+            />
+            <span>{likeCount} people liked this</span>
+          </div>
+        )}
 
         {/* Description */}
         <p

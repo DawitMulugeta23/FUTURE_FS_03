@@ -2,8 +2,8 @@
 import axios from "axios";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
+import FoodCard from "../pages/FoodCard"; // FIXED: Changed from ../pages/FoodCard
 import { useTheme } from "../context/useTheme";
-import FoodCard from "../pages/FoodCard";
 
 const categories = ["All", "Coffee", "Pastry", "Meal", "Drink"];
 

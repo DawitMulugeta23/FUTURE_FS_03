@@ -1,6 +1,15 @@
 // frontend/src/pages/StaffRegister.jsx
 import axios from "axios";
-import { Building, Clock, Lock, Mail, Phone, User, Users } from "lucide-react";
+import {
+  BadgeCheck,
+  Building,
+  Clock,
+  Lock,
+  Mail,
+  Phone,
+  User,
+  Users,
+} from "lucide-react"; // FIXED: Added BadgeCheck
 import { useState } from "react";
 import { toast } from "react-hot-toast";
 import { Link, useNavigate } from "react-router-dom";

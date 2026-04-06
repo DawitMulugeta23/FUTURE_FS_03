@@ -81,15 +81,15 @@ exports.createOrder = async (req, res) => {
 
     console.log("Order created:", order._id);
 
-    // ✅ USE REAL EMAIL - Either from user or your Gmail for testing
+    // USE REAL EMAIL - Either from user or your Gmail for testing
     let userEmail = req.user.email;
 
-    // For testing, use your REAL Gmail address
+    // For testing, use environment variable instead of hardcoded email
     const TEST_MODE = process.env.SKIP_EMAIL_VALIDATION_FOR_TESTING === "true";
 
     if (TEST_MODE) {
-      // Use your REAL email address for testing
-      userEmail = "dawitmulugetas23@gmail.com"; // ✅ CHANGE THIS TO YOUR REAL EMAIL
+      // Use environment variable for test email - FIXED: no hardcoded email
+      userEmail = process.env.TEST_EMAIL || userEmail;
       console.log(`⚠️ TEST MODE: Using email: ${userEmail}`);
     }
 
@@ -206,8 +206,7 @@ exports.deleteOrder = async (req, res) => {
     });
   }
 };
-// @desc    Verify Chapa payment
-// @route   GET /api/orders/verify/:tx_ref
+
 exports.verifyPayment = async (req, res) => {
   try {
     const { tx_ref } = req.params;
@@ -389,14 +388,30 @@ exports.getAdminStats = async (req, res) => {
       0,
     );
 
+    // Get today's orders
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const todayOrdersList = await Order.find({
+      createdAt: { $gte: today, $lt: tomorrow },
+    });
+
+    const todayOrders = todayOrdersList.length;
+    const todayRevenue = todayOrdersList.reduce(
+      (sum, order) => sum + (order.isPaid ? order.totalPrice : 0),
+      0,
+    );
+
     res.status(200).json({
       success: true,
       stats: {
         totalOrders: totalOrders,
         totalRevenue: totalRevenue,
         pendingOrders: await Order.countDocuments({ status: "Pending" }),
-        todayOrders: 0,
-        todayRevenue: 0,
+        todayOrders: todayOrders,
+        todayRevenue: todayRevenue,
       },
       analytics: {
         statusDistribution: [],
