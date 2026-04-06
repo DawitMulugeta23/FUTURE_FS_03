@@ -1,3 +1,4 @@
+// backend/src/models/Food.js
 const mongoose = require("mongoose");
 
 const FoodSchema = new mongoose.Schema(
@@ -5,6 +6,7 @@ const FoodSchema = new mongoose.Schema(
     name: { type: String, required: true },
     description: { type: String, required: true },
     price: { type: Number, required: true },
+    originalPrice: { type: Number, default: null }, // Add this field
     quantity: { type: Number, required: true, min: 0, default: 0 },
     image: { type: String, required: true },
     category: {

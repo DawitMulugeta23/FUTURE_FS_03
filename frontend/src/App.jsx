@@ -1,3 +1,4 @@
+// frontend/src/App.jsx
 import { Toaster } from "react-hot-toast";
 import { Route, Routes } from "react-router-dom";
 import Navbar from "./components/Navbar";
@@ -7,7 +8,6 @@ import { ThemeProvider } from "./context/ThemeContext";
 import { useTheme } from "./context/useTheme";
 import About from "./pages/About";
 import AdminDashboard from "./pages/AdminDashboard";
-import AdminRegister from "./pages/AdminRegister";
 import Cart from "./pages/Cart";
 import Checkout from "./pages/Checkout";
 import Contact from "./pages/Contact";
@@ -47,7 +47,6 @@ const AppContent = () => {
         />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
-        <Route path="/register/admin" element={<AdminRegister />} />
         <Route path="/register/staff" element={<StaffRegister />} />
         <Route path="/order-success" element={<OrderSuccess />} />
         <Route

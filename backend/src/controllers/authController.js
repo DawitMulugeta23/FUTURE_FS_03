@@ -20,15 +20,19 @@ const sendTokenResponse = (user, statusCode, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
+      phone: user.phone || "",
     },
   });
 };
 
-// Customer Registration
+// Customer Registration (Common - first user becomes admin)
 exports.registerCustomer = async (req, res) => {
   try {
-    const { name, email, password } = req.body;
+    const { name, email, password, phone } = req.body;
 
+    console.log("Registration attempt:", { name, email, phone });
+
+    // Validation
     if (!name || !email || !password) {
       return res.status(400).json({
         success: false,
@@ -43,6 +47,7 @@ exports.registerCustomer = async (req, res) => {
       });
     }
 
+    // Check if user exists
     const existingUser = await User.findOne({ email });
     if (existingUser) {
       return res.status(400).json({
@@ -51,16 +56,24 @@ exports.registerCustomer = async (req, res) => {
       });
     }
 
+    // First user becomes admin, others become regular users
     const userCount = await User.countDocuments();
     const role = userCount === 0 ? "admin" : "user";
 
+    console.log("User count:", userCount, "Role assigned:", role);
+
+    // Create user
     const user = await User.create({
       name,
       email,
       password,
+      phone: phone || "",
       role: role,
     });
 
+    console.log("User created successfully:", user._id);
+
+    // Send welcome email (don't await to avoid blocking)
     sendEmail({
       email: user.email,
       subject: "Welcome to Yesekela Cafe!",
@@ -70,6 +83,12 @@ exports.registerCustomer = async (req, res) => {
     sendTokenResponse(user, 201, res);
   } catch (err) {
     console.error("Registration error:", err);
+    if (err.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        error: "Email already registered",
+      });
+    }
     res.status(500).json({
       success: false,
       error: err.message || "Registration failed",
@@ -77,57 +96,11 @@ exports.registerCustomer = async (req, res) => {
   }
 };
 
-// Admin Registration
-exports.registerAdmin = async (req, res) => {
-  try {
-    const { name, email, password, adminCode } = req.body;
-
-    if (!name || !email || !password) {
-      return res.status(400).json({
-        success: false,
-        error: "Please provide name, email and password",
-      });
-    }
-
-    const validAdminCode =
-      process.env.ADMIN_REGISTRATION_CODE || "YESEKELA_ADMIN_2024";
-
-    if (adminCode !== validAdminCode) {
-      return res.status(403).json({
-        success: false,
-        error: "Invalid admin registration code",
-      });
-    }
-
-    const existingUser = await User.findOne({ email });
-    if (existingUser) {
-      return res.status(400).json({
-        success: false,
-        error: "Email already registered",
-      });
-    }
-
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role: "admin",
-    });
-
-    sendTokenResponse(user, 201, res);
-  } catch (err) {
-    console.error("Admin registration error:", err);
-    res.status(500).json({
-      success: false,
-      error: err.message || "Admin registration failed",
-    });
-  }
-};
-
 // Staff Registration
 exports.registerStaff = async (req, res) => {
   try {
-    const { name, email, password, managerCode } = req.body;
+    const { name, email, password, phone, managerCode, department, shift } =
+      req.body;
 
     if (!name || !email || !password) {
       return res.status(400).json({
@@ -158,12 +131,20 @@ exports.registerStaff = async (req, res) => {
       name,
       email,
       password,
+      phone: phone || "",
       role: "staff",
+      isActive: true,
     });
 
     sendTokenResponse(user, 201, res);
   } catch (err) {
     console.error("Staff registration error:", err);
+    if (err.code === 11000) {
+      return res.status(400).json({
+        success: false,
+        error: "Email already registered",
+      });
+    }
     res.status(500).json({
       success: false,
       error: err.message || "Staff registration failed",
@@ -171,7 +152,7 @@ exports.registerStaff = async (req, res) => {
   }
 };
 
-// Login - FIXED (no next parameter)
+// Login
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;

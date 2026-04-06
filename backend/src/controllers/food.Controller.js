@@ -83,11 +83,13 @@ exports.addFood = async (req, res) => {
         error: "Food image is required",
       });
     }
-
     const food = await Food.create({
       name: name.trim(),
       description: description.trim(),
       price: Number(price),
+      originalPrice: req.body.originalPrice
+        ? Number(req.body.originalPrice)
+        : Number(price),
       quantity: parsedQuantity,
       category,
       image: imageUrl,
