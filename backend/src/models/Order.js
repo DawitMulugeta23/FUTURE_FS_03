@@ -10,6 +10,8 @@ const OrderSchema = new mongoose.Schema(
         quantity: { type: Number, required: true },
         image: { type: String, required: true },
         price: { type: Number, required: true },
+        originalPrice: { type: Number, default: null },
+        discountedPrice: { type: Number, default: null },
         product: {
           type: mongoose.Schema.ObjectId,
           ref: "Food",
@@ -18,8 +20,10 @@ const OrderSchema = new mongoose.Schema(
       },
     ],
     totalPrice: { type: Number, required: true, default: 0.0 },
+    originalTotalPrice: { type: Number, default: 0.0 },
+    discountApplied: { type: Number, default: 0 },
     isPaid: { type: Boolean, required: true, default: false },
-    paidAt: { type: Date }, // Fixed: removed { Date } - was causing syntax error
+    paidAt: { type: Date },
     paymentReference: { type: String },
     status: {
       type: String,

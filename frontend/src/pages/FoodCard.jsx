@@ -9,7 +9,7 @@ import {
   TrendingDown,
   TrendingUp,
 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useCart } from "../context/useCart";
@@ -24,6 +24,7 @@ const FoodCard = ({ food, onLikeUpdate }) => {
   const [isLiked, setIsLiked] = useState(food.userLiked || false);
   const [likeCount, setLikeCount] = useState(food.likeCount || 0);
   const [isLiking, setIsLiking] = useState(false);
+  const [isFirstOrderEligible, setIsFirstOrderEligible] = useState(false);
 
   const maxQuantity =
     typeof food.quantity === "number" && food.quantity >= 0
@@ -37,7 +38,7 @@ const FoodCard = ({ food, onLikeUpdate }) => {
 
   const canAddToCart = isLoggedIn && !isAdmin;
 
-  // Price calculation with discount
+  // Price calculation
   const currentPrice = food.price;
   const originalPrice = food.originalPrice || food.price;
   const hasDiscount = originalPrice > currentPrice;
@@ -46,7 +47,39 @@ const FoodCard = ({ food, onLikeUpdate }) => {
     : 0;
   const isPriceIncreased = originalPrice < currentPrice;
 
-  // Handle like/unlike
+  // First order discount (3% off for items > 50 ETB)
+  const showFirstOrderDiscount =
+    isFirstOrderEligible && currentPrice > 50 && !isOutOfStock;
+  const discountedPrice = showFirstOrderDiscount
+    ? (currentPrice * 0.97).toFixed(2)
+    : currentPrice;
+
+  useEffect(() => {
+    checkDiscountEligibility();
+  }, []);
+
+  const checkDiscountEligibility = async () => {
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        return;
+      }
+
+      const response = await axios.get(
+        "http://localhost:5000/api/orders/check-discount",
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
+
+      if (response.data.success) {
+        setIsFirstOrderEligible(response.data.isEligible);
+      }
+    } catch (error) {
+      console.error("Error checking discount:", error);
+    }
+  };
+
   const handleLike = async (e) => {
     e.stopPropagation();
 
@@ -107,10 +140,16 @@ const FoodCard = ({ food, onLikeUpdate }) => {
       return;
     }
 
+    const itemToAdd = {
+      ...food,
+      price: parseFloat(discountedPrice),
+      originalPrice: currentPrice,
+    };
+
     try {
-      await addToCart(food, quantity);
+      await addToCart(itemToAdd, quantity);
       toast.success(
-        `${quantity} ${food.name}${quantity > 1 ? "s" : ""} added to cart!`,
+        `${quantity} ${food.name}${quantity > 1 ? "s" : ""} added to cart!${showFirstOrderDiscount ? " (First order discount applied)" : ""}`,
         {
           icon: "☕",
           duration: 2000,
@@ -147,6 +186,12 @@ const FoodCard = ({ food, onLikeUpdate }) => {
     try {
       const result = await buyNow(food._id, quantity);
 
+      if (result.orderItem && showFirstOrderDiscount) {
+        result.orderItem.price = parseFloat(discountedPrice);
+        result.orderItem.originalPrice = currentPrice;
+        result.totalPrice = parseFloat(discountedPrice) * quantity;
+      }
+
       toast.dismiss(loadingToast);
 
       sessionStorage.setItem(
@@ -154,6 +199,7 @@ const FoodCard = ({ food, onLikeUpdate }) => {
         JSON.stringify({
           item: result.orderItem,
           totalPrice: result.totalPrice,
+          discountApplied: showFirstOrderDiscount,
         }),
       );
 
@@ -193,7 +239,6 @@ const FoodCard = ({ food, onLikeUpdate }) => {
     navigate(`/menu/${food._id}`);
   };
 
-  // Render stars for rating
   const renderStars = () => {
     const rating = food.averageRating || 0;
     const fullStars = Math.floor(rating);
@@ -230,6 +275,59 @@ const FoodCard = ({ food, onLikeUpdate }) => {
     );
   };
 
+  const PriceDisplay = () => {
+    if (showFirstOrderDiscount) {
+      return (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-2xl font-bold text-green-600 dark:text-green-400">
+            {discountedPrice} ETB
+          </span>
+          <span className="text-sm text-gray-400 line-through">
+            {currentPrice} ETB
+          </span>
+          <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
+            First Order -3%
+          </span>
+        </div>
+      );
+    }
+
+    if (hasDiscount) {
+      return (
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-2xl font-bold text-red-600 dark:text-red-400">
+            {currentPrice} ETB
+          </span>
+          <span className="text-sm text-gray-400 line-through">
+            {originalPrice} ETB
+          </span>
+          <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
+            Save {originalPrice - currentPrice} ETB
+          </span>
+        </div>
+      );
+    }
+
+    if (isPriceIncreased) {
+      return (
+        <div className="flex items-center gap-2">
+          <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
+            {currentPrice} ETB
+          </span>
+          <span className="text-sm text-gray-400 line-through">
+            {originalPrice} ETB
+          </span>
+        </div>
+      );
+    }
+
+    return (
+      <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+        {currentPrice} ETB
+      </span>
+    );
+  };
+
   return (
     <div
       onClick={handleCardClick}
@@ -237,7 +335,6 @@ const FoodCard = ({ food, onLikeUpdate }) => {
         darkMode ? "bg-gray-800" : "bg-white"
       }`}
     >
-      {/* Image Container */}
       <div
         className={`relative h-48 overflow-hidden ${
           darkMode ? "bg-gray-700" : "bg-amber-50"
@@ -249,7 +346,6 @@ const FoodCard = ({ food, onLikeUpdate }) => {
           className="h-full w-full object-contain transition-transform duration-300 group-hover:scale-105"
         />
 
-        {/* Like Button */}
         {isLoggedIn && !isAdmin && (
           <button
             onClick={handleLike}
@@ -267,7 +363,6 @@ const FoodCard = ({ food, onLikeUpdate }) => {
           </button>
         )}
 
-        {/* Sold Count Badge */}
         {food.soldCount > 0 && (
           <div className="absolute left-3 bottom-3 bg-black/60 text-white px-2 py-1 rounded-lg text-xs font-bold z-10 flex items-center gap-1">
             <ShoppingBag size={12} />
@@ -275,19 +370,26 @@ const FoodCard = ({ food, onLikeUpdate }) => {
           </div>
         )}
 
-        {/* Discount Badge */}
-        {hasDiscount && !isOutOfStock && (
+        {showFirstOrderDiscount && !isOutOfStock && (
+          <div className="absolute left-3 top-3 bg-green-500 text-white px-2 py-1 rounded-lg text-xs font-bold z-10 flex items-center gap-1">
+            🎁 -3% First Order
+          </div>
+        )}
+
+        {hasDiscount && !isOutOfStock && !showFirstOrderDiscount && (
           <div className="absolute left-3 top-3 bg-red-500 text-white px-2 py-1 rounded-lg text-xs font-bold z-10 flex items-center gap-1">
             <TrendingDown size={12} />-{discountPercent}%
           </div>
         )}
 
-        {/* Price Increase Badge */}
-        {isPriceIncreased && !hasDiscount && !isOutOfStock && (
-          <div className="absolute left-3 top-3 bg-orange-500 text-white px-2 py-1 rounded-lg text-xs font-bold z-10 flex items-center gap-1">
-            <TrendingUp size={12} />
-          </div>
-        )}
+        {isPriceIncreased &&
+          !hasDiscount &&
+          !isOutOfStock &&
+          !showFirstOrderDiscount && (
+            <div className="absolute left-3 top-3 bg-orange-500 text-white px-2 py-1 rounded-lg text-xs font-bold z-10 flex items-center gap-1">
+              <TrendingUp size={12} />
+            </div>
+          )}
 
         {isOutOfStock && (
           <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-10">
@@ -299,7 +401,6 @@ const FoodCard = ({ food, onLikeUpdate }) => {
       </div>
 
       <div className="p-4 flex flex-col flex-1">
-        {/* Title and Category */}
         <div className="mb-2">
           <h3
             className={`text-lg font-bold transition-colors duration-300 line-clamp-1 ${
@@ -322,7 +423,6 @@ const FoodCard = ({ food, onLikeUpdate }) => {
           </div>
         </div>
 
-        {/* Like count display */}
         {likeCount > 0 && (
           <div className="flex items-center gap-1 mb-2 text-xs text-gray-500 dark:text-gray-400">
             <Heart
@@ -333,7 +433,6 @@ const FoodCard = ({ food, onLikeUpdate }) => {
           </div>
         )}
 
-        {/* Description */}
         <p
           className={`mb-3 text-sm line-clamp-2 flex-1 transition-colors duration-300 ${
             darkMode ? "text-gray-400" : "text-gray-500"
@@ -342,39 +441,11 @@ const FoodCard = ({ food, onLikeUpdate }) => {
           {food.description}
         </p>
 
-        {/* Price Section - At the bottom */}
         <div className="mt-auto">
-          {/* Price Display */}
           <div className="mb-3">
-            {hasDiscount ? (
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-2xl font-bold text-red-600 dark:text-red-400">
-                  {currentPrice} ETB
-                </span>
-                <span className="text-sm text-gray-400 line-through">
-                  {originalPrice} ETB
-                </span>
-                <span className="text-xs bg-green-100 dark:bg-green-900/50 text-green-700 dark:text-green-400 px-2 py-0.5 rounded-full">
-                  Save {originalPrice - currentPrice} ETB
-                </span>
-              </div>
-            ) : isPriceIncreased ? (
-              <div className="flex items-center gap-2">
-                <span className="text-2xl font-bold text-orange-600 dark:text-orange-400">
-                  {currentPrice} ETB
-                </span>
-                <span className="text-sm text-gray-400 line-through">
-                  {originalPrice} ETB
-                </span>
-              </div>
-            ) : (
-              <span className="text-2xl font-bold text-amber-600 dark:text-amber-400">
-                {currentPrice} ETB
-              </span>
-            )}
+            <PriceDisplay />
           </div>
 
-          {/* Quantity and Buttons - Only for logged-in non-admin users */}
           {canAddToCart && !isOutOfStock && (
             <>
               <div
@@ -433,6 +504,11 @@ const FoodCard = ({ food, onLikeUpdate }) => {
                   }`}
                 >
                   Add to Cart
+                  {showFirstOrderDiscount && (
+                    <span className="text-xs ml-1 bg-green-500 text-white px-1 rounded">
+                      -3%
+                    </span>
+                  )}
                 </button>
 
                 <button
@@ -455,7 +531,6 @@ const FoodCard = ({ food, onLikeUpdate }) => {
             </>
           )}
 
-          {/* Out of Stock Message */}
           {canAddToCart && isOutOfStock && (
             <button
               disabled
@@ -465,7 +540,6 @@ const FoodCard = ({ food, onLikeUpdate }) => {
             </button>
           )}
 
-          {/* Login to Order Button */}
           {!isLoggedIn && (
             <button
               onClick={(e) => {
@@ -478,7 +552,6 @@ const FoodCard = ({ food, onLikeUpdate }) => {
             </button>
           )}
 
-          {/* Admin Restriction Message */}
           {isLoggedIn && isAdmin && (
             <div className="mt-2 p-2 rounded-lg text-center text-xs bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400">
               🔒 Admin accounts cannot place orders

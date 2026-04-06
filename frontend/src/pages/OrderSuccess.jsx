@@ -2,13 +2,14 @@
 import axios from "axios";
 import { AlertCircle, CheckCircle2 } from "lucide-react";
 import { useEffect, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import { useCart } from "../context/useCart";
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
 const OrderSuccess = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const { clearCart } = useCart();
   const [verifying, setVerifying] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState(null);
@@ -42,8 +43,12 @@ const OrderSuccess = () => {
   useEffect(() => {
     if (paymentStatus === "success") {
       clearCart();
+      // Redirect to cart with flag to refresh discount after 2 seconds
+      setTimeout(() => {
+        navigate("/cart?order_placed=true");
+      }, 2000);
     }
-  }, [paymentStatus, clearCart]);
+  }, [paymentStatus, clearCart, navigate]);
 
   if (verifying) {
     return (
@@ -56,7 +61,6 @@ const OrderSuccess = () => {
     );
   }
 
-  // Removed unused isSuccess variable - only keep isFailed
   const isFailed = paymentStatus === "failed";
 
   return (

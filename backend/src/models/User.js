@@ -1,6 +1,7 @@
 // backend/src/models/User.js
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const crypto = require("crypto");
 
 const UserSchema = new mongoose.Schema(
   {
@@ -21,6 +22,11 @@ const UserSchema = new mongoose.Schema(
     },
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },
+
+    // Track order history for discount
+    hasPlacedOrder: { type: Boolean, default: false },
+    orderCount: { type: Number, default: 0 },
+    firstOrderDate: { type: Date },
 
     // Google OAuth fields
     googleId: { type: String, unique: true, sparse: true },

@@ -1,7 +1,25 @@
 // backend/src/controllers/order.controller.js
 const Order = require("../models/Order");
 const Food = require("../models/Food");
+const User = require("../models/User");
 const axios = require("axios");
+
+// Helper function to calculate discount
+const calculateDiscountedPrice = (price, isFirstOrder) => {
+  if (isFirstOrder && price > 50) {
+    const discount = price * 0.03;
+    return {
+      discountedPrice: parseFloat((price - discount).toFixed(2)),
+      originalPrice: price,
+      discountApplied: 3,
+    };
+  }
+  return {
+    discountedPrice: price,
+    originalPrice: price,
+    discountApplied: 0,
+  };
+};
 
 exports.createOrder = async (req, res) => {
   try {
@@ -16,9 +34,11 @@ exports.createOrder = async (req, res) => {
         error: "No order items",
       });
     }
+
     const isValidEmail = (email) => {
       return email && email.includes("@") && email.includes(".");
     };
+
     if (!req.user.email || !isValidEmail(req.user.email)) {
       return res.status(400).json({
         success: false,
@@ -26,17 +46,25 @@ exports.createOrder = async (req, res) => {
           "Please update your profile with a valid email address before placing an order. go to Settings.",
       });
     }
-    // Format order items
-    const formattedItems = orderItems.map((item) => ({
-      _id: item._id,
-      name: item.name,
-      quantity: item.qty || 1,
-      price: item.price,
-      image: item.image,
-    }));
 
-    // Verify stock
-    for (const item of formattedItems) {
+    // Check if this is user's first order
+    const user = await User.findById(req.user.id);
+    const isFirstOrder = !user.hasPlacedOrder;
+
+    console.log(
+      "Is first order:",
+      isFirstOrder,
+      "User has placed order:",
+      user.hasPlacedOrder,
+    );
+
+    // Format order items with discount if first order
+    const formattedItems = [];
+    let calculatedTotalPrice = 0;
+    let calculatedOriginalTotalPrice = 0;
+
+    for (const item of orderItems) {
+      // Verify stock
       const food = await Food.findById(item._id);
       if (!food) {
         return res.status(404).json({
@@ -44,21 +72,45 @@ exports.createOrder = async (req, res) => {
           error: `Product ${item.name} not found`,
         });
       }
-      if (food.quantity < item.quantity) {
+      if (food.quantity < (item.qty || 1)) {
         return res.status(400).json({
           success: false,
           error: `${food.name} has only ${food.quantity} items in stock.`,
         });
       }
+
+      const quantity = item.qty || 1;
+      const originalPrice = item.price;
+
+      // Apply discount for first-time users on items > 50 ETB
+      const { discountedPrice, discountApplied } = calculateDiscountedPrice(
+        originalPrice,
+        isFirstOrder,
+      );
+
+      const itemTotal = discountedPrice * quantity;
+      const originalItemTotal = originalPrice * quantity;
+
+      calculatedTotalPrice += itemTotal;
+      calculatedOriginalTotalPrice += originalItemTotal;
+
+      formattedItems.push({
+        name: item.name,
+        quantity: quantity,
+        image: item.image,
+        price: discountedPrice,
+        originalPrice: originalPrice,
+        discountedPrice: discountedPrice,
+        product: item._id,
+      });
     }
 
-    // Calculate total if not provided
-    if (!totalPrice) {
-      totalPrice = formattedItems.reduce(
-        (sum, item) => sum + item.price * item.quantity,
-        0,
-      );
-    }
+    // Use calculated total or provided totalPrice
+    const finalTotalPrice = totalPrice || calculatedTotalPrice;
+    const finalOriginalTotalPrice = calculatedOriginalTotalPrice;
+
+    // Calculate total discount percentage
+    const totalDiscountPercentage = isFirstOrder ? 3 : 0;
 
     // Generate transaction reference
     const tx_ref = "ORDER-" + req.user._id + "-" + Date.now();
@@ -66,29 +118,41 @@ exports.createOrder = async (req, res) => {
     // Create order
     const order = await Order.create({
       user: req.user.id,
-      orderItems: formattedItems.map((item) => ({
-        name: item.name,
-        quantity: item.quantity,
-        image: item.image,
-        price: item.price,
-        product: item._id,
-      })),
-      totalPrice: Number(totalPrice),
+      orderItems: formattedItems,
+      totalPrice: Number(finalTotalPrice),
+      originalTotalPrice: Number(finalOriginalTotalPrice),
+      discountApplied: totalDiscountPercentage,
       isPaid: false,
       status: "Pending",
       paymentReference: tx_ref,
     });
 
+    // IMPORTANT: Mark user as having placed an order IMMEDIATELY
+    // This removes discount eligibility even before payment
+    if (isFirstOrder) {
+      user.hasPlacedOrder = true;
+      user.orderCount = (user.orderCount || 0) + 1;
+      user.firstOrderDate = new Date();
+      await user.save();
+      console.log(
+        `User ${user.email} has placed their first order! Discount eligibility removed.`,
+      );
+    }
+
     console.log("Order created:", order._id);
+    console.log("Discount applied:", totalDiscountPercentage, "%");
+    console.log(
+      "Original total:",
+      finalOriginalTotalPrice,
+      "Discounted total:",
+      finalTotalPrice,
+    );
 
-    // USE REAL EMAIL - Either from user or your Gmail for testing
+    // Prepare email for user
     let userEmail = req.user.email;
-
-    // For testing, use environment variable instead of hardcoded email
     const TEST_MODE = process.env.SKIP_EMAIL_VALIDATION_FOR_TESTING === "true";
 
     if (TEST_MODE) {
-      // Use environment variable for test email - FIXED: no hardcoded email
       userEmail = process.env.TEST_EMAIL || userEmail;
       console.log(`⚠️ TEST MODE: Using email: ${userEmail}`);
     }
@@ -97,14 +161,13 @@ exports.createOrder = async (req, res) => {
       console.error("Invalid email:", userEmail);
       return res.status(400).json({
         success: false,
-        error:
-          "Please update your profile with a valid email address. Current email is invalid.",
+        error: "Please update your profile with a valid email address.",
       });
     }
 
     // Prepare Chapa payment data
     const chapaData = {
-      amount: Number(totalPrice),
+      amount: Number(finalTotalPrice),
       currency: "ETB",
       email: userEmail,
       first_name: req.user.name?.split(" ")[0] || "Yesekela",
@@ -113,7 +176,7 @@ exports.createOrder = async (req, res) => {
       callback_url: `${process.env.FRONTEND_URL}/order-success`,
       return_url: `${process.env.FRONTEND_URL}/order-success`,
       title: "Yesekela Café Payment",
-      description: `Order #${order._id}`,
+      description: `Order #${order._id}${isFirstOrder ? " (First Order - 3% Discount Applied)" : ""}`,
     };
 
     console.log("Sending to Chapa:", JSON.stringify(chapaData, null, 2));
@@ -142,6 +205,8 @@ exports.createOrder = async (req, res) => {
         checkout_url: response.data.data.checkout_url,
         tx_ref: tx_ref,
         orderId: order._id,
+        discountApplied: totalDiscountPercentage,
+        isFirstOrder: isFirstOrder,
       });
     } else {
       return res.status(400).json({
@@ -207,6 +272,8 @@ exports.deleteOrder = async (req, res) => {
   }
 };
 
+// @desc    Verify Chapa payment
+// @route   GET /api/orders/verify/:tx_ref
 exports.verifyPayment = async (req, res) => {
   try {
     const { tx_ref } = req.params;
@@ -234,7 +301,7 @@ exports.verifyPayment = async (req, res) => {
         order.status = "Preparing";
         await order.save();
 
-        // Update stock
+        // Update stock and soldCount
         for (const item of order.orderItems) {
           await Food.findByIdAndUpdate(item.product, {
             $inc: {
@@ -243,6 +310,9 @@ exports.verifyPayment = async (req, res) => {
             },
           });
         }
+
+        // Note: User's hasPlacedOrder is already set to true when order was created
+        // No need to update it again here
 
         console.log(`Order ${order._id} marked as paid`);
       }
@@ -284,7 +354,7 @@ exports.getMyOrders = async (req, res) => {
 exports.getAllOrders = async (req, res) => {
   try {
     const orders = await Order.find()
-      .populate("user", "name email phone")
+      .populate("user", "name email phone hasPlacedOrder orderCount")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -354,7 +424,7 @@ exports.getOrderDetails = async (req, res) => {
   try {
     const order = await Order.findById(req.params.id).populate(
       "user",
-      "name email phone",
+      "name email phone hasPlacedOrder orderCount",
     );
 
     if (!order) {
@@ -404,6 +474,13 @@ exports.getAdminStats = async (req, res) => {
       0,
     );
 
+    // Get first-time order stats
+    const firstTimeOrders = await Order.find({ discountApplied: { $gt: 0 } });
+    const totalDiscountGiven = firstTimeOrders.reduce(
+      (sum, order) => sum + (order.originalTotalPrice - order.totalPrice),
+      0,
+    );
+
     res.status(200).json({
       success: true,
       stats: {
@@ -412,6 +489,8 @@ exports.getAdminStats = async (req, res) => {
         pendingOrders: await Order.countDocuments({ status: "Pending" }),
         todayOrders: todayOrders,
         todayRevenue: todayRevenue,
+        firstTimeOrders: firstTimeOrders.length,
+        totalDiscountGiven: totalDiscountGiven,
       },
       analytics: {
         statusDistribution: [],
@@ -421,6 +500,30 @@ exports.getAdminStats = async (req, res) => {
     });
   } catch (err) {
     console.error("Get admin stats error:", err);
+    res.status(500).json({
+      success: false,
+      error: err.message,
+    });
+  }
+};
+
+// @desc    Check if user is eligible for first-time discount
+// @route   GET /api/orders/check-discount
+exports.checkDiscountEligibility = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id);
+    const isEligible = !user.hasPlacedOrder;
+
+    res.status(200).json({
+      success: true,
+      isEligible: isEligible,
+      discountPercentage: isEligible ? 3 : 0,
+      message: isEligible
+        ? "You're eligible for 3% discount on your first order (items over 50 ETB)!"
+        : "First-time discount already used. Check back for new promotions!",
+    });
+  } catch (err) {
+    console.error("Check discount error:", err);
     res.status(500).json({
       success: false,
       error: err.message,

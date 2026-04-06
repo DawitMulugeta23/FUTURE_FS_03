@@ -1,5 +1,6 @@
 // backend/src/controllers/authController.js
 const jwt = require("jsonwebtoken");
+const crypto = require("crypto");
 const User = require("../models/User");
 const sendEmail = require("../utils/sendEmail");
 
@@ -56,7 +57,7 @@ exports.registerCustomer = async (req, res) => {
       });
     }
 
-    // First user becomes admin, others become regular users
+    // IMPORTANT: First user becomes admin, others become regular users
     const userCount = await User.countDocuments();
     const role = userCount === 0 ? "admin" : "user";
 
@@ -69,15 +70,21 @@ exports.registerCustomer = async (req, res) => {
       password,
       phone: phone || "",
       role: role,
+      isActive: true,
     });
 
-    console.log("User created successfully:", user._id);
+    console.log(
+      "User created successfully:",
+      user._id,
+      "with role:",
+      user.role,
+    );
 
     // Send welcome email (don't await to avoid blocking)
     sendEmail({
       email: user.email,
       subject: "Welcome to Yesekela Cafe!",
-      message: `Welcome to Yesekela Cafe, ${name}! We are thrilled to have you.`,
+      message: `Welcome to Yesekela Cafe, ${name}! You are our ${role === "admin" ? "first admin user" : "new customer"}. We are thrilled to have you.`,
     }).catch((err) => console.error("Email error:", err.message));
 
     sendTokenResponse(user, 201, res);
@@ -195,7 +202,7 @@ exports.login = async (req, res) => {
     user.lastLogin = Date.now();
     await user.save({ validateBeforeSave: false });
 
-    console.log("Login successful for:", email);
+    console.log("Login successful for:", email, "Role:", user.role);
     sendTokenResponse(user, 200, res);
   } catch (err) {
     console.error("Login error:", err);
@@ -269,10 +276,9 @@ exports.updateProfile = async (req, res) => {
   }
 };
 
-// ============ PASSWORD RESET WITH 6-DIGIT CODE ============
+// ============ PASSWORD RESET FUNCTIONS ============
 
-// @desc    Send 6-digit verification code to email
-// @route   POST /api/auth/forgot-password
+// @desc    Forgot password - send reset token email
 exports.forgotPassword = async (req, res) => {
   try {
     const { email } = req.body;
@@ -293,11 +299,9 @@ exports.forgotPassword = async (req, res) => {
       });
     }
 
-    // Generate 6-digit reset code
     const resetCode = user.generateResetCode();
     await user.save({ validateBeforeSave: false });
 
-    // Email message with the 6-digit code
     const message = `
 Hello ${user.name},
 
@@ -307,9 +311,7 @@ Your 6-digit verification code is: ${resetCode}
 
 This code is valid for 10 minutes.
 
-Please enter this code on the verification page to continue with your password reset.
-
-If you did not request this, please ignore this email and your password will remain unchanged.
+If you did not request this, please ignore this email.
 
 Best regards,
 Yesekela Café Team
@@ -324,21 +326,17 @@ Yesekela Café Team
 
       res.status(200).json({
         success: true,
-        message:
-          "Verification code sent to your email. Please check your inbox.",
+        message: "Verification code sent to your email.",
         email: user.email,
       });
     } catch (emailError) {
-      console.error("Email send error:", emailError);
-
-      // Reset code fields if email fails
       user.resetCode = undefined;
       user.resetCodeExpire = undefined;
       await user.save({ validateBeforeSave: false });
 
       return res.status(500).json({
         success: false,
-        error: "Failed to send verification email. Please try again later.",
+        error: "Failed to send verification email.",
       });
     }
   } catch (err) {
@@ -350,8 +348,7 @@ Yesekela Café Team
   }
 };
 
-// @desc    Verify 6-digit code
-// @route   POST /api/auth/verify-reset-code
+// @desc    Verify reset code
 exports.verifyResetCode = async (req, res) => {
   try {
     const { email, code } = req.body;
@@ -372,7 +369,6 @@ exports.verifyResetCode = async (req, res) => {
       });
     }
 
-    // Check if code is valid
     if (!user.resetCode || user.resetCode !== code) {
       return res.status(400).json({
         success: false,
@@ -380,7 +376,6 @@ exports.verifyResetCode = async (req, res) => {
       });
     }
 
-    // Check if code is expired
     if (user.resetCodeExpire < Date.now()) {
       return res.status(400).json({
         success: false,
@@ -388,11 +383,9 @@ exports.verifyResetCode = async (req, res) => {
       });
     }
 
-    // Mark code as verified
     user.resetCodeVerified = true;
     await user.save({ validateBeforeSave: false });
 
-    // Generate a temporary token for password reset
     const resetToken = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
@@ -401,7 +394,7 @@ exports.verifyResetCode = async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: "Code verified successfully. You can now reset your password.",
+      message: "Code verified successfully.",
       resetToken: resetToken,
     });
   } catch (err) {
@@ -413,8 +406,7 @@ exports.verifyResetCode = async (req, res) => {
   }
 };
 
-// @desc    Reset password after code verification
-// @route   POST /api/auth/reset-password
+// @desc    Reset password
 exports.resetPassword = async (req, res) => {
   try {
     const { resetToken, password, confirmPassword } = req.body;
@@ -440,7 +432,6 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    // Verify the reset token
     let decoded;
     try {
       decoded = jwt.verify(resetToken, process.env.JWT_SECRET);
@@ -460,22 +451,19 @@ exports.resetPassword = async (req, res) => {
       });
     }
 
-    // Check if code was verified
     if (!user.resetCodeVerified) {
       return res.status(400).json({
         success: false,
-        error: "Verification code not verified. Please verify your code first.",
+        error: "Verification code not verified.",
       });
     }
 
-    // Set new password
     user.password = password;
     user.resetCode = undefined;
     user.resetCodeExpire = undefined;
     user.resetCodeVerified = false;
     await user.save();
 
-    // Send confirmation email
     try {
       await sendEmail({
         email: user.email,
@@ -497,8 +485,7 @@ Yesekela Café Team
 
     res.status(200).json({
       success: true,
-      message:
-        "Password reset successful. You can now login with your new password.",
+      message: "Password reset successful. You can now login.",
     });
   } catch (err) {
     console.error("Reset password error:", err);
@@ -509,16 +496,10 @@ Yesekela Café Team
   }
 };
 
-// Add these functions to authController.js
-
-// @desc    Google OAuth callback
-// @route   GET /api/auth/google/callback
+// Google OAuth functions (placeholder for now)
 exports.googleCallback = async (req, res) => {
   try {
-    // User is already attached to req by passport
     const user = req.user;
-
-    // Generate JWT token
     const token = jwt.sign(
       { id: user._id, role: user.role },
       process.env.JWT_SECRET,
