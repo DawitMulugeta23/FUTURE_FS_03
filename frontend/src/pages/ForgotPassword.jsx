@@ -11,8 +11,6 @@ const ForgotPassword = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const [userEmail, setUserEmail] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -31,9 +29,11 @@ const ForgotPassword = () => {
       );
 
       if (response.data.success) {
-        setUserEmail(response.data.email);
-        setEmailSent(true);
         toast.success(response.data.message);
+        // Navigate AFTER successful API call, not during render
+        navigate("/verify-reset-code", {
+          state: { email: response.data.email || email },
+        });
       }
     } catch (error) {
       console.error("Forgot password error:", error);
@@ -44,12 +44,6 @@ const ForgotPassword = () => {
       setLoading(false);
     }
   };
-
-  if (emailSent) {
-    // Navigate to verify code page
-    navigate("/verify-reset-code", { state: { email: userEmail } });
-    return null;
-  }
 
   return (
     <div

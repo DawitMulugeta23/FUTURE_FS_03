@@ -3,21 +3,44 @@ const express = require("express");
 const dotenv = require("dotenv");
 const path = require("path");
 const cors = require("cors");
+const session = require("express-session");
+const passport = require("passport");
 
 dotenv.config({ path: path.resolve(__dirname, "../.env") });
+
 const contactRoutes = require("./routes/contactRoutes");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/auth.routes");
 const foodRoutes = require("./routes/food.Routes");
-const orderRoutes = require("./routes/orderRoutes"); 
+const orderRoutes = require("./routes/orderRoutes");
 const cartRoutes = require("./routes/cartRoutes");
 const adminRoutes = require("./routes/adminRoutes");
 const feedbackRoutes = require("./routes/feedback.routes");
+
+// Passport config
+require("./config/passport")(passport);
 
 // Connect to Database
 connectDB();
 
 const app = express();
+
+// Session middleware (required for Passport)
+app.use(
+  session({
+    secret: process.env.JWT_SECRET || "secret",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: process.env.NODE_ENV === "production",
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  }),
+);
+
+// Passport middleware
+app.use(passport.initialize());
+app.use(passport.session());
 
 // CORS configuration
 const corsOptions = {
@@ -50,10 +73,10 @@ app.get("/", (req, res) => {
   res.json({ success: true, message: "Yesekela Café API is running" });
 });
 
-// Routes - IMPORTANT: Order matters
+// Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/food", foodRoutes);
-app.use("/api/orders", orderRoutes); // ← THIS MUST BE PRESENT
+app.use("/api/orders", orderRoutes);
 app.use("/api/feedback", feedbackRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/contact", contactRoutes);

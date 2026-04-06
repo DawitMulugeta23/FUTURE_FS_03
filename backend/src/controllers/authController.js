@@ -324,12 +324,13 @@ Yesekela Café Team
 
       res.status(200).json({
         success: true,
-        message: "Verification code sent to your email. Please check your inbox.",
+        message:
+          "Verification code sent to your email. Please check your inbox.",
         email: user.email,
       });
     } catch (emailError) {
       console.error("Email send error:", emailError);
-      
+
       // Reset code fields if email fails
       user.resetCode = undefined;
       user.resetCodeExpire = undefined;
@@ -395,7 +396,7 @@ exports.verifyResetCode = async (req, res) => {
     const resetToken = jwt.sign(
       { id: user._id, email: user.email },
       process.env.JWT_SECRET,
-      { expiresIn: "15m" }
+      { expiresIn: "15m" },
     );
 
     res.status(200).json({
@@ -496,7 +497,8 @@ Yesekela Café Team
 
     res.status(200).json({
       success: true,
-      message: "Password reset successful. You can now login with your new password.",
+      message:
+        "Password reset successful. You can now login with your new password.",
     });
   } catch (err) {
     console.error("Reset password error:", err);
@@ -505,4 +507,34 @@ Yesekela Café Team
       error: err.message || "Failed to reset password",
     });
   }
+};
+
+// Add these functions to authController.js
+
+// @desc    Google OAuth callback
+// @route   GET /api/auth/google/callback
+exports.googleCallback = async (req, res) => {
+  try {
+    // User is already attached to req by passport
+    const user = req.user;
+
+    // Generate JWT token
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.JWT_EXPIRE || "30d" },
+    );
+
+    user.lastLogin = Date.now();
+    await user.save({ validateBeforeSave: false });
+
+    res.redirect(`${process.env.FRONTEND_URL}/oauth-success?token=${token}`);
+  } catch (err) {
+    console.error("Google callback error:", err);
+    res.redirect(`${process.env.FRONTEND_URL}/login?error=google_auth_failed`);
+  }
+};
+
+exports.googleFailure = (req, res) => {
+  res.redirect(`${process.env.FRONTEND_URL}/login?error=google_auth_failed`);
 };

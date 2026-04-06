@@ -1,49 +1,40 @@
 // frontend/src/pages/ResetPassword.jsx
 import axios from "axios";
-import { CheckCircle, Coffee, Eye, EyeOff, Lock, XCircle } from "lucide-react";
+import { CheckCircle, Coffee, Eye, EyeOff, Lock } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "react-hot-toast";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTheme } from "../context/useTheme";
 
 const ResetPassword = () => {
-  const { token } = useParams();
+  const location = useLocation();
   const navigate = useNavigate();
   const { darkMode } = useTheme();
+  const resetToken = location.state?.resetToken || "";
+
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [validating, setValidating] = useState(true);
-  const [tokenValid, setTokenValid] = useState(false);
-  const [email, setEmail] = useState("");
   const [resetSuccess, setResetSuccess] = useState(false);
 
+  // Redirect if no token
   useEffect(() => {
-    validateToken();
-  }, [token]);
-
-  const validateToken = async () => {
-    try {
-      const response = await axios.get(
-        `http://localhost:5000/api/auth/validate-reset-token/${token}`,
-      );
-
-      if (response.data.success) {
-        setTokenValid(true);
-        setEmail(response.data.email);
-      }
-    } catch (error) {
-      console.error("Token validation error:", error);
-      setTokenValid(false);
-    } finally {
-      setValidating(false);
+    if (!resetToken) {
+      toast.error("Invalid reset session. Please request a new code.");
+      navigate("/forgot-password");
     }
-  };
+  }, [resetToken, navigate]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    if (!resetToken) {
+      toast.error("Invalid reset session. Please request a new code.");
+      navigate("/forgot-password");
+      return;
+    }
 
     if (!password || !confirmPassword) {
       toast.error("Please fill in all fields");
@@ -63,9 +54,9 @@ const ResetPassword = () => {
     setLoading(true);
 
     try {
-      const response = await axios.put(
-        `http://localhost:5000/api/auth/reset-password/${token}`,
-        { password, confirmPassword },
+      const response = await axios.post(
+        "http://localhost:5000/api/auth/reset-password",
+        { resetToken, password, confirmPassword },
       );
 
       if (response.data.success) {
@@ -84,72 +75,6 @@ const ResetPassword = () => {
       setLoading(false);
     }
   };
-
-  if (validating) {
-    return (
-      <div
-        className={`min-h-screen flex items-center justify-center transition-colors duration-300 ${
-          darkMode
-            ? "bg-gray-900"
-            : "bg-gradient-to-br from-amber-50 via-white to-orange-50"
-        }`}
-      >
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-4 border-amber-600 dark:border-amber-500 mx-auto mb-4"></div>
-          <p
-            className={`transition-colors duration-300 ${
-              darkMode ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
-            Validating reset link...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!tokenValid) {
-    return (
-      <div
-        className={`min-h-screen flex items-center justify-center transition-colors duration-300 px-4 ${
-          darkMode
-            ? "bg-gray-900"
-            : "bg-gradient-to-br from-amber-50 via-white to-orange-50"
-        }`}
-      >
-        <div
-          className={`p-8 rounded-2xl shadow-xl w-full max-w-md text-center transition-colors duration-300 ${
-            darkMode ? "bg-gray-800" : "bg-white"
-          }`}
-        >
-          <div className="inline-flex p-3 rounded-full mb-4 bg-red-100 dark:bg-red-900/50">
-            <XCircle size={40} className="text-red-600 dark:text-red-400" />
-          </div>
-          <h2
-            className={`text-2xl font-bold mb-3 transition-colors duration-300 ${
-              darkMode ? "text-white" : "text-gray-800"
-            }`}
-          >
-            Invalid or Expired Link
-          </h2>
-          <p
-            className={`mb-6 transition-colors duration-300 ${
-              darkMode ? "text-gray-400" : "text-gray-600"
-            }`}
-          >
-            This password reset link is invalid or has expired. Please request a
-            new one.
-          </p>
-          <Link
-            to="/forgot-password"
-            className="inline-block bg-amber-600 text-white px-6 py-2 rounded-lg hover:bg-amber-700 transition"
-          >
-            Request New Link
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   if (resetSuccess) {
     return (
@@ -197,6 +122,10 @@ const ResetPassword = () => {
     );
   }
 
+  if (!resetToken) {
+    return null; // Will redirect in useEffect
+  }
+
   return (
     <div
       className={`min-h-screen flex items-center justify-center transition-colors duration-300 px-4 ${
@@ -231,7 +160,7 @@ const ResetPassword = () => {
               darkMode ? "text-gray-400" : "text-gray-600"
             }`}
           >
-            Enter your new password for {email}
+            Enter your new password below
           </p>
         </div>
 

@@ -22,7 +22,12 @@ const UserSchema = new mongoose.Schema(
     isActive: { type: Boolean, default: true },
     lastLogin: { type: Date },
 
-    // Password reset fields with 6-digit code
+    // Google OAuth fields
+    googleId: { type: String, unique: true, sparse: true },
+    avatar: { type: String, default: "" },
+    emailVerified: { type: Boolean, default: false },
+
+    // Password reset fields
     resetCode: { type: String },
     resetCodeExpire: { type: Date },
     resetCodeVerified: { type: Boolean, default: false },
@@ -30,9 +35,9 @@ const UserSchema = new mongoose.Schema(
   { timestamps: true },
 );
 
-// Hash password before saving - FIXED: removed next parameter
+// Hash password before saving - only if password is modified and not from Google
 UserSchema.pre("save", async function () {
-  if (this.isModified("password")) {
+  if (this.isModified("password") && !this.googleId) {
     const salt = await bcrypt.genSalt(10);
     this.password = await bcrypt.hash(this.password, salt);
   }
@@ -45,16 +50,10 @@ UserSchema.methods.matchPassword = async function (enteredPassword) {
 
 // Generate 6-digit reset code
 UserSchema.methods.generateResetCode = function () {
-  // Generate 6-digit random code
   const code = Math.floor(100000 + Math.random() * 900000).toString();
-
-  // Save hashed code to database
   this.resetCode = code;
-
-  // Set expire (10 minutes)
   this.resetCodeExpire = Date.now() + 10 * 60 * 1000;
   this.resetCodeVerified = false;
-
   return code;
 };
 

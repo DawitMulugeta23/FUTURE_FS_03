@@ -22,6 +22,8 @@ import Profile from "./pages/Profile";
 import Register from "./pages/Register";
 import ResetPassword from "./pages/ResetPassword";
 import StaffRegister from "./pages/StaffRegister";
+import VerifyResetCode from "./pages/VerifyResetCode";
+import OAuthSuccess from "./pages/OAuthSuccess";
 
 const AppContent = () => {
   const { darkMode } = useTheme();
@@ -39,6 +41,7 @@ const AppContent = () => {
         <Route path="/menu" element={<Menu />} />
         <Route path="/menu/:id" element={<MenuItemDetail />} />
         <Route path="/cart" element={<Cart />} />
+        <Route path="/oauth-success" element={<OAuthSuccess />} />
         <Route
           path="/checkout"
           element={
@@ -52,7 +55,8 @@ const AppContent = () => {
         <Route path="/register/staff" element={<StaffRegister />} />
         <Route path="/order-success" element={<OrderSuccess />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
-        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/verify-reset-code" element={<VerifyResetCode />} />
+        <Route path="/reset-password" element={<ResetPassword />} />
         <Route
           path="/profile"
           element={

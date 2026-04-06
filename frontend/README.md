@@ -1,4 +1,4 @@
-# React + Vite
+Demo credentials: demo@example.com / demo123
 
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
