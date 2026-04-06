@@ -7,6 +7,9 @@ const {
   login,
   getProfile,
   updateProfile,
+  forgotPassword,
+  verifyResetCode,
+  resetPassword,
 } = require("../controllers/authController");
 const { protect } = require("../middleware/authMiddleware");
 
@@ -18,8 +21,13 @@ router.post("/register/staff", registerStaff);
 // Login route
 router.post("/login", login);
 
-// Profile routes (ADD THESE)
+// Profile routes
 router.get("/profile", protect, getProfile);
 router.put("/profile", protect, updateProfile);
+
+// Password reset routes with 6-digit code
+router.post("/forgot-password", forgotPassword);
+router.post("/verify-reset-code", verifyResetCode);
+router.post("/reset-password", resetPassword);
 
 module.exports = router;

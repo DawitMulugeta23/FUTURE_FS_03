@@ -125,6 +125,18 @@ const Login = () => {
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
           </div>
+          <div className="text-right">
+            <Link
+              to="/forgot-password"
+              className={`text-sm transition-colors duration-300 ${
+                darkMode
+                  ? "text-gray-400 hover:text-amber-400"
+                  : "text-gray-500 hover:text-amber-600"
+              }`}
+            >
+              Forgot Password?
+            </Link>
+          </div>
 
           <button
             type="submit"
