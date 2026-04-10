@@ -22,7 +22,7 @@ const AddFoodForm = () => {
     data.append("imagePath", image); // This goes to Cloudinary via backend
 
     const token = localStorage.getItem("token");
-    await axios.post("http://localhost:5000/api/food", data, {
+    await axios.post("https://future-fs-03-db4a.onrender.com/api/food", data, {
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-Type": "multipart/form-data",
@@ -52,7 +52,9 @@ const AddFoodForm = () => {
           min="0"
           placeholder="Quantity"
           className="w-full p-3 border rounded-xl"
-          onChange={(e) => setFormData({ ...formData, quantity: e.target.value })}
+          onChange={(e) =>
+            setFormData({ ...formData, quantity: e.target.value })
+          }
         />
         <textarea
           placeholder="Description"

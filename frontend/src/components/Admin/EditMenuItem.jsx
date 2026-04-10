@@ -34,7 +34,7 @@ const EditMenuItem = () => {
     const fetchMenuItem = async () => {
       try {
         const response = await axios.get(
-          `http://localhost:5000/api/food/${id}`,
+          `https://future-fs-03-db4a.onrender.com/api/food/${id}`,
         );
         const item = response.data.data;
         setFormData({
@@ -95,12 +95,16 @@ const EditMenuItem = () => {
 
     try {
       const token = localStorage.getItem("token");
-      await axios.put(`http://localhost:5000/api/food/${id}`, submitData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data",
+      await axios.put(
+        `https://future-fs-03-db4a.onrender.com/api/food/${id}`,
+        submitData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "multipart/form-data",
+          },
         },
-      });
+      );
       toast.success("Menu item updated successfully!");
       navigate("/admin/menu");
     } catch (error) {
@@ -119,9 +123,12 @@ const EditMenuItem = () => {
     if (confirmDelete) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:5000/api/food/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.delete(
+          `https://future-fs-03-db4a.onrender.com/api/food/${id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
         toast.success("Menu item deleted successfully!");
         navigate("/admin/menu");
       } catch (error) {

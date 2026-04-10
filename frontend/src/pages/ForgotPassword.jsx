@@ -24,7 +24,7 @@ const ForgotPassword = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/forgot-password",
+        "https://future-fs-03-db4a.onrender.com/api/auth/forgot-password",
         { email },
       );
 

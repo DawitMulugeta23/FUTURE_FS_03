@@ -36,12 +36,15 @@ const OrdersManager = () => {
         return;
       }
 
-      const response = await axios.get("http://localhost:5000/api/orders", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
+      const response = await axios.get(
+        "https://future-fs-03-db4a.onrender.com/api/orders",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         },
-      });
+      );
 
       if (response.data && response.data.success) {
         setOrders(response.data.data || []);
@@ -61,7 +64,7 @@ const OrdersManager = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/orders/${orderId}/status`,
+        `https://future-fs-03-db4a.onrender.com/api/orders/${orderId}/status`,
         { status },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -80,9 +83,12 @@ const OrdersManager = () => {
       async () => {
         try {
           const token = localStorage.getItem("token");
-          await axios.delete(`http://localhost:5000/api/orders/${orderId}`, {
-            headers: { Authorization: `Bearer ${token}` },
-          });
+          await axios.delete(
+            `https://future-fs-03-db4a.onrender.com/api/orders/${orderId}`,
+            {
+              headers: { Authorization: `Bearer ${token}` },
+            },
+          );
           toast.success("Order deleted successfully");
           fetchOrders(); // Refresh the list
 
@@ -108,7 +114,7 @@ const OrdersManager = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `http://localhost:5000/api/orders/${orderId}`,
+        `https://future-fs-03-db4a.onrender.com/api/orders/${orderId}`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },

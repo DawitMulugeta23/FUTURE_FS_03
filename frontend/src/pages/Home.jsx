@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import {
   ArrowRight,
   Award,
@@ -13,6 +12,7 @@ import {
   Users,
   UtensilsCrossed,
 } from "lucide-react";
+import { Link } from "react-router-dom";
 
 const Home = () => {
   const features = [
@@ -86,14 +86,16 @@ const Home = () => {
             </div>
 
             <h1 className="mb-5 text-5xl font-bold leading-tight md:text-7xl">
-              More than a café — <span className="text-amber-400">a warm local experience.</span>
+              More than a café —{" "}
+              <span className="text-amber-400">a warm local experience.</span>
             </h1>
 
             <p className="mb-8 max-w-2xl text-lg text-gray-200 md:text-xl">
-              Welcome to <strong>Yesekela Café</strong>, where authentic Ethiopian coffee,
-              handmade pastries, comforting meals, and quick service come together.
-              Whether you are starting your day, meeting friends, or ordering from home,
-              we make every visit simple, fresh, and memorable.
+              Welcome to <strong>Yesekela Café</strong>, where authentic
+              Ethiopian coffee, handmade pastries, comforting meals, and quick
+              service come together. Whether you are starting your day, meeting
+              friends, or ordering from home, we make every visit simple, fresh,
+              and memorable.
             </p>
 
             <div className="mb-10 flex flex-wrap gap-4">
@@ -117,7 +119,9 @@ const Home = () => {
                   key={item.label}
                   className="rounded-2xl border border-white/15 bg-white/10 p-4 backdrop-blur-sm"
                 >
-                  <p className="text-xl font-bold text-amber-300">{item.value}</p>
+                  <p className="text-xl font-bold text-amber-300">
+                    {item.value}
+                  </p>
                   <p className="text-sm text-gray-200">{item.label}</p>
                 </div>
               ))}
@@ -136,8 +140,9 @@ const Home = () => {
               A welcoming place for coffee, comfort, and convenience
             </h2>
             <p className="mx-auto mt-4 max-w-3xl text-gray-600 dark:text-gray-300">
-              We are here to make your day easier with quality ingredients, a calm atmosphere,
-              and an ordering experience that helps you enjoy your favorites without the wait.
+              We are here to make your day easier with quality ingredients, a
+              calm atmosphere, and an ordering experience that helps you enjoy
+              your favorites without the wait.
             </p>
           </div>
 
@@ -148,12 +153,17 @@ const Home = () => {
                 className="rounded-2xl bg-white p-6 text-center shadow-lg transition-shadow hover:shadow-xl dark:bg-gray-800"
               >
                 <div className="mb-4 inline-flex rounded-full bg-amber-100 p-3 dark:bg-amber-900/50">
-                  <feature.icon className="text-amber-600 dark:text-amber-400" size={32} />
+                  <feature.icon
+                    className="text-amber-600 dark:text-amber-400"
+                    size={32}
+                  />
                 </div>
                 <h3 className="mb-2 text-xl font-bold text-gray-800 dark:text-white">
                   {feature.title}
                 </h3>
-                <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
+                <p className="text-gray-600 dark:text-gray-300">
+                  {feature.description}
+                </p>
               </div>
             ))}
           </div>
@@ -167,12 +177,14 @@ const Home = () => {
               What makes Yesekela special
             </p>
             <h2 className="text-3xl font-bold text-gray-900 dark:text-white md:text-4xl">
-              Designed for busy mornings, relaxed afternoons, and easy online orders
+              Designed for busy mornings, relaxed afternoons, and easy online
+              orders
             </h2>
             <p className="mt-4 text-lg leading-8 text-gray-600 dark:text-gray-300">
-              Yesekela Café is built for people who value both flavor and convenience.
-              From your first morning coffee to an evening snack, our team is focused on
-              fast service, warm hospitality, and food that feels freshly made just for you.
+              Yesekela Café is built for people who value both flavor and
+              convenience. From your first morning coffee to an evening snack,
+              our team is focused on fast service, warm hospitality, and food
+              that feels freshly made just for you.
             </p>
 
             <div className="mt-6 space-y-4">
@@ -182,7 +194,10 @@ const Home = () => {
                 "Quick ordering flow for pickup or delivery",
               ].map((point) => (
                 <div key={point} className="flex items-start gap-3">
-                  <CheckCircle2 className="mt-0.5 text-amber-600 dark:text-amber-400" size={20} />
+                  <CheckCircle2
+                    className="mt-0.5 text-amber-600 dark:text-amber-400"
+                    size={20}
+                  />
                   <p className="text-gray-700 dark:text-gray-200">{point}</p>
                 </div>
               ))}
@@ -196,31 +211,49 @@ const Home = () => {
 
             <div className="space-y-4">
               <div className="flex items-start gap-3 rounded-2xl bg-white/80 p-4 dark:bg-black/20">
-                <Clock3 className="text-amber-600 dark:text-amber-400" size={22} />
+                <Clock3
+                  className="text-amber-600 dark:text-amber-400"
+                  size={22}
+                />
                 <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">Open every day</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    Open every day
+                  </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Start your morning with a fresh brew and stop by again for a relaxing bite later.
+                    Start your morning with a fresh brew and stop by again for a
+                    relaxing bite later.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3 rounded-2xl bg-white/80 p-4 dark:bg-black/20">
-                <UtensilsCrossed className="text-amber-600 dark:text-amber-400" size={22} />
+                <UtensilsCrossed
+                  className="text-amber-600 dark:text-amber-400"
+                  size={22}
+                />
                 <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">More than coffee</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    More than coffee
+                  </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Enjoy pastries, meals, and drinks that fit breakfast, lunch, or a quick snack.
+                    Enjoy pastries, meals, and drinks that fit breakfast, lunch,
+                    or a quick snack.
                   </p>
                 </div>
               </div>
 
               <div className="flex items-start gap-3 rounded-2xl bg-white/80 p-4 dark:bg-black/20">
-                <ShieldCheck className="text-amber-600 dark:text-amber-400" size={22} />
+                <ShieldCheck
+                  className="text-amber-600 dark:text-amber-400"
+                  size={22}
+                />
                 <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">Reliable service</p>
+                  <p className="font-semibold text-gray-900 dark:text-white">
+                    Reliable service
+                  </p>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
-                    Count on quality preparation, clean packaging, and a smooth ordering process.
+                    Count on quality preparation, clean packaging, and a smooth
+                    ordering process.
                   </p>
                 </div>
               </div>
@@ -242,12 +275,19 @@ const Home = () => {
 
           <div className="grid gap-6 md:grid-cols-3">
             {steps.map((step, index) => (
-              <div key={step.title} className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800">
+              <div
+                key={step.title}
+                className="rounded-2xl bg-white p-6 shadow-sm dark:bg-gray-800"
+              >
                 <div className="mb-4 inline-flex h-10 w-10 items-center justify-center rounded-full bg-amber-600 font-bold text-white">
                   {index + 1}
                 </div>
-                <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">{step.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300">{step.description}</p>
+                <h3 className="mb-2 text-xl font-bold text-gray-900 dark:text-white">
+                  {step.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-300">
+                  {step.description}
+                </p>
               </div>
             ))}
           </div>
@@ -267,8 +307,9 @@ const Home = () => {
               A local favorite for good reason
             </h2>
             <p className="mx-auto mt-4 max-w-2xl text-lg text-gray-600 dark:text-gray-300">
-              Join students, families, and coffee lovers who choose Yesekela Café for its cozy atmosphere,
-              dependable service, and menu full of satisfying everyday favorites.
+              Join students, families, and coffee lovers who choose Yesekela
+              Café for its cozy atmosphere, dependable service, and menu full of
+              satisfying everyday favorites.
             </p>
 
             <div className="mt-6 flex flex-wrap items-center justify-center gap-4 text-sm font-medium text-gray-700 dark:text-gray-200">
@@ -292,8 +333,9 @@ const Home = () => {
             Special welcome offer
           </h2>
           <p className="mx-auto mt-4 max-w-2xl text-lg text-amber-800 dark:text-amber-100">
-            Get <strong>20% off</strong> on your first order with code <strong>WELCOME20</strong>.
-            It is the perfect time to discover your next favorite coffee or snack.
+            Get <strong>20% off</strong> on your first order with code{" "}
+            <strong>WELCOME20</strong>. It is the perfect time to discover your
+            next favorite coffee or snack.
           </p>
           <Link
             to="/menu"

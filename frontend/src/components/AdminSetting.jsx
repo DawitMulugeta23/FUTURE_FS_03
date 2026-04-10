@@ -29,7 +29,7 @@ const AdminSetting = () => {
     try {
       const token = localStorage.getItem("token");
       const { data } = await axios.get(
-        "http://localhost:5000/api/admin/settings",
+        "https://future-fs-03-db4a.onrender.com/api/admin/settings",
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -47,9 +47,13 @@ const AdminSetting = () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
-      await axios.put("http://localhost:5000/api/admin/settings", settings, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      await axios.put(
+        "https://future-fs-03-db4a.onrender.com/api/admin/settings",
+        settings,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        },
+      );
       setSaved(true);
       toast.success("Settings saved successfully!");
       setTimeout(() => setSaved(false), 3000);

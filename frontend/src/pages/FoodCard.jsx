@@ -80,7 +80,7 @@ const FoodCard = ({ food, onLikeUpdate }) => {
       }
 
       const response = await axios.get(
-        "http://localhost:5000/api/orders/check-discount",
+        "https://future-fs-03-db4a.onrender.com/api/orders/check-discount",
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -115,7 +115,7 @@ const FoodCard = ({ food, onLikeUpdate }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:5000/api/food/${food._id}/like`,
+        `https://future-fs-03-db4a.onrender.com/api/food/${food._id}/like`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );

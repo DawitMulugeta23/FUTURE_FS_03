@@ -68,7 +68,7 @@ const MenuItemDetail = () => {
         ? { headers: { Authorization: `Bearer ${token}` } }
         : {};
       const { data } = await axios.get(
-        `http://localhost:5000/api/food/${id}`,
+        `https://future-fs-03-db4a.onrender.com/api/food/${id}`,
         config,
       );
       setItem(data.data);
@@ -96,7 +96,7 @@ const MenuItemDetail = () => {
         ? { headers: { Authorization: `Bearer ${token}` } }
         : {};
       const { data } = await axios.get(
-        `http://localhost:5000/api/food/${id}/related`,
+        `https://future-fs-03-db4a.onrender.com/api/food/${id}/related`,
         config,
       );
       setRelatedProducts(data.data);
@@ -196,7 +196,7 @@ const MenuItemDetail = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:5000/api/food/${item._id}/like`,
+        `https://future-fs-03-db4a.onrender.com/api/food/${item._id}/like`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -234,7 +234,7 @@ const MenuItemDetail = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:5000/api/food/${item._id}/dislike`,
+        `https://future-fs-03-db4a.onrender.com/api/food/${item._id}/dislike`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -268,7 +268,7 @@ const MenuItemDetail = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `http://localhost:5000/api/food/${item._id}/rate`,
+        `https://future-fs-03-db4a.onrender.com/api/food/${item._id}/rate`,
         { rating: finalRating, review: ratingReview },
         { headers: { Authorization: `Bearer ${token}` } },
       );

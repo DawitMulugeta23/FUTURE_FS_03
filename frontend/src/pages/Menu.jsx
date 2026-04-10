@@ -2,8 +2,8 @@
 import axios from "axios";
 import { Search } from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
-import FoodCard from "../pages/FoodCard"; // FIXED: Changed from ../pages/FoodCard
 import { useTheme } from "../context/useTheme";
+import FoodCard from "../pages/FoodCard"; // FIXED: Changed from ../pages/FoodCard
 
 const categories = ["All", "Coffee", "Pastry", "Meal", "Drink"];
 
@@ -17,7 +17,9 @@ const Menu = () => {
   useEffect(() => {
     const fetchFoods = async () => {
       try {
-        const { data } = await axios.get("http://localhost:5000/api/food");
+        const { data } = await axios.get(
+          "https://future-fs-03-db4a.onrender.com/api/food",
+        );
         setFoods(data.data || []);
       } catch (error) {
         console.error("Failed to load menu", error);

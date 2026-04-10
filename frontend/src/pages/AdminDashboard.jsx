@@ -8,7 +8,6 @@ import EditMenuItem from "../components/Admin/EditMenuItem";
 import FeedbackManager from "../components/Admin/FeedbackManager";
 import MenuManager from "../components/Admin/MenuManager";
 import OrdersManager from "../components/Admin/OrdersManager";
-import StockNotification from "../components/Admin/StockNotification";
 import UsersManager from "../components/Admin/UserManager";
 import AdminSetting from "../components/AdminSetting";
 import AdminSidebar from "../components/AdminSidebar";
@@ -45,8 +44,13 @@ const AdminDashboard = () => {
       const headers = { Authorization: `Bearer ${token}` };
 
       const [ordersRes, usersRes] = await Promise.all([
-        axios.get("http://localhost:5000/api/orders/stats", { headers }),
-        axios.get("http://localhost:5000/api/admin/users/count", { headers }),
+        axios.get("https://future-fs-03-db4a.onrender.com/api/orders/stats", {
+          headers,
+        }),
+        axios.get(
+          "https://future-fs-03-db4a.onrender.com/api/admin/users/count",
+          { headers },
+        ),
       ]);
 
       setStats({
@@ -73,7 +77,9 @@ const AdminDashboard = () => {
 
   const fetchMenuCount = async () => {
     try {
-      const { data } = await axios.get("http://localhost:5000/api/food");
+      const { data } = await axios.get(
+        "https://future-fs-03-db4a.onrender.com/api/food",
+      );
       setStats((prev) => ({ ...prev, totalMenuItems: data.data.length }));
     } catch (err) {
       console.error("Error fetching menu count", err);
@@ -127,7 +133,6 @@ const AdminDashboard = () => {
 
       <div className="flex-1 ml-64">
         {/* Header with Notification Icon */}
-        
 
         <div className="p-8">
           <Routes>

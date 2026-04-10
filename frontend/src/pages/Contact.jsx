@@ -29,11 +29,15 @@ const Contact = () => {
     setSending(true);
 
     try {
-      await axios.post("http://localhost:5000/api/contact", formData);
+      await axios.post(
+        "https://future-fs-03-db4a.onrender.com/api/contact",
+        formData,
+      );
       toast.success("Message sent! We'll get back to you soon.");
       setFormData({ name: "", email: "", subject: "", message: "" });
     } catch (error) {
       toast.error("Failed to send message. Please try again.");
+      console.error("Error " ,error.message);
     } finally {
       setSending(false);
     }

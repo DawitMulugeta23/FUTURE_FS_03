@@ -6,7 +6,8 @@ import { toast } from "react-hot-toast";
 import { useNavigate } from "react-router-dom";
 import { useTheme } from "../context/useTheme";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL =
+  import.meta.env.VITE_API_URL || "https://future-fs-03-db4a.onrender.com/api";
 
 const Profile = () => {
   const { darkMode } = useTheme();

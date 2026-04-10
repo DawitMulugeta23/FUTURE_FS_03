@@ -55,7 +55,7 @@ const AdminRegister = () => {
       };
 
       await axios.post(
-        "http://localhost:5000/api/auth/register/admin",
+        "https://future-fs-03-db4a.onrender.com/api/auth/register/admin",
         submitData,
       );
       toast.success("Admin registration successful! Please login.");

@@ -55,7 +55,7 @@ const ResetPassword = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/reset-password",
+        "https://future-fs-03-db4a.onrender.com/api/auth/reset-password",
         { resetToken, password, confirmPassword },
       );
 

@@ -23,7 +23,7 @@ const OAuthSuccess = () => {
 
       // Fetch user profile
       axios
-        .get("http://localhost:5000/api/auth/profile", {
+        .get("https://future-fs-03-db4a.onrender.com/api/auth/profile", {
           headers: { Authorization: `Bearer ${token}` },
         })
         .then((response) => {

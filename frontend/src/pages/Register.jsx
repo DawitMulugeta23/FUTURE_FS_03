@@ -43,7 +43,7 @@ const Register = () => {
       };
 
       const response = await axios.post(
-        "http://localhost:5000/api/auth/register",
+        "https://future-fs-03-db4a.onrender.com/api/auth/register",
         submitData,
         {
           headers: {

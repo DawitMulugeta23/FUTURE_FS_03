@@ -22,7 +22,7 @@ const StockNotification = () => {
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        "http://localhost:5000/api/food/admin/low-stock",
+        "https://future-fs-03-db4a.onrender.com/api/food/admin/low-stock",
         {
           headers: { Authorization: `Bearer ${token}` },
         },

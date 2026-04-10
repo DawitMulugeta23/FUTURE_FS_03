@@ -1,4 +1,3 @@
-// frontend/src/pages/VerifyResetCode.jsx
 import axios from "axios";
 import { ArrowLeft, CheckCircle, Key, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -59,7 +58,7 @@ const VerifyResetCode = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/verify-reset-code",
+        "https://future-fs-03-db4a.onrender.com/api/auth/verify-reset-code",
         { email, code: verificationCode },
       );
 
@@ -91,7 +90,7 @@ const VerifyResetCode = () => {
 
     try {
       const response = await axios.post(
-        "http://localhost:5000/api/auth/forgot-password",
+        "https://future-fs-03-db4a.onrender.com/api/auth/forgot-password",
         { email },
       );
 

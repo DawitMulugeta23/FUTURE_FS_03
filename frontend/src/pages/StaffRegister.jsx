@@ -57,7 +57,7 @@ const StaffRegister = () => {
       };
 
       await axios.post(
-        "http://localhost:5000/api/auth/register/staff",
+        "https://future-fs-03-db4a.onrender.com/api/auth/register/staff",
         submitData,
       );
       toast.success("Staff registration successful! Please login.");

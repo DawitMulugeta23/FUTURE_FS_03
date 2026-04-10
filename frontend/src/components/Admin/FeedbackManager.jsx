@@ -28,7 +28,7 @@ const FeedbackManager = () => {
     try {
       const token = localStorage.getItem("token");
       const { data } = await axios.get(
-        `http://localhost:5000/api/admin/feedback${filter !== "all" ? `?status=${filter}` : ""}`,
+        `https://future-fs-03-db4a.onrender.com/api/admin/feedback${filter !== "all" ? `?status=${filter}` : ""}`,
         { headers: { Authorization: `Bearer ${token}` } },
       );
       setFeedback(data.data);
@@ -51,7 +51,7 @@ const FeedbackManager = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        `http://localhost:5000/api/admin/feedback/${selectedFeedback._id}/reply`,
+        `https://future-fs-03-db4a.onrender.com/api/admin/feedback/${selectedFeedback._id}/reply`,
         { message: replyMessage },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -70,9 +70,12 @@ const FeedbackManager = () => {
     if (window.confirm("Are you sure you want to delete this feedback?")) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:5000/api/admin/feedback/${id}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.delete(
+          `https://future-fs-03-db4a.onrender.com/api/admin/feedback/${id}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
         toast.success("Feedback deleted successfully");
         fetchFeedback();
       } catch (err) {

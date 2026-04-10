@@ -21,7 +21,7 @@ const UsersManager = () => {
     try {
       const token = localStorage.getItem("token");
       const { data } = await axios.get(
-        "http://localhost:5000/api/admin/users",
+        "https://future-fs-03-db4a.onrender.com/api/admin/users",
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -39,7 +39,7 @@ const UsersManager = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.put(
-        `http://localhost:5000/api/admin/users/${userId}/role`,
+        `https://future-fs-03-db4a.onrender.com/api/admin/users/${userId}/role`,
         { role: newRole },
         { headers: { Authorization: `Bearer ${token}` } },
       );
@@ -55,9 +55,12 @@ const UsersManager = () => {
     if (window.confirm("Are you sure you want to delete this user?")) {
       try {
         const token = localStorage.getItem("token");
-        await axios.delete(`http://localhost:5000/api/admin/users/${userId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
+        await axios.delete(
+          `https://future-fs-03-db4a.onrender.com/api/admin/users/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          },
+        );
         toast.success("User deleted");
         fetchUsers();
       } catch (err) {
@@ -72,7 +75,7 @@ const UsersManager = () => {
     try {
       const token = localStorage.getItem("token");
       await axios.post(
-        "http://localhost:5000/api/admin/send-email",
+        "https://future-fs-03-db4a.onrender.com/api/admin/send-email",
         {
           userId: selectedUser._id,
           subject: emailData.subject,

@@ -2,7 +2,8 @@ import axios from "axios";
 import { useEffect, useState } from "react";
 import CartContext from "./cart-context";
 
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const API_URL =
+  import.meta.env.VITE_API_URL || "https://future-fs-03-db4a.onrender.com/api";
 
 export const CartProvider = ({ children }) => {
   const [cartItems, setCartItems] = useState([]);

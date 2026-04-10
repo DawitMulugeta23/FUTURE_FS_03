@@ -8,7 +8,7 @@ const Orders = () => {
     const fetchMyOrders = async () => {
       const token = localStorage.getItem("token");
       const { data } = await axios.get(
-        "http://localhost:5000/api/orders/myorders",
+        "https://future-fs-03-db4a.onrender.com/api/orders/myorders",
         {
           headers: { Authorization: `Bearer ${token}` },
         },

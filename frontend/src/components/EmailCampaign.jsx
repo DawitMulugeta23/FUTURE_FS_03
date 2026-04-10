@@ -1,13 +1,13 @@
-import { useState, useEffect } from 'react';
-import axios from 'axios';
-import { Send, Users, Mail, AlertCircle } from 'lucide-react';
-import toast from 'react-hot-toast';
+import axios from "axios";
+import { AlertCircle, Mail, Send } from "lucide-react";
+import { useEffect, useState } from "react";
+import toast from "react-hot-toast";
 
 const EmailCampaign = () => {
   const [emailForm, setEmailForm] = useState({
-    subject: '',
-    message: '',
-    userFilter: 'all'
+    subject: "",
+    message: "",
+    userFilter: "all",
   });
   const [sending, setSending] = useState(false);
   const [preview, setPreview] = useState(false);
@@ -19,38 +19,38 @@ const EmailCampaign = () => {
 
   const fetchUserCount = async () => {
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       const { data } = await axios.get(
-        `http://localhost:5000/api/admin/users/count?filter=${emailForm.userFilter}`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `https://future-fs-03-db4a.onrender.com/api/admin/users/count?filter=${emailForm.userFilter}`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       setUserCount(data.count);
     } catch (err) {
-      console.error('Error fetching user count', err);
+      console.error("Error fetching user count", err);
     }
   };
 
   const handleSendCampaign = async (e) => {
     e.preventDefault();
-    
+
     if (!emailForm.subject.trim() || !emailForm.message.trim()) {
-      toast.error('Please fill in subject and message');
+      toast.error("Please fill in subject and message");
       return;
     }
 
     setSending(true);
     try {
-      const token = localStorage.getItem('token');
+      const token = localStorage.getItem("token");
       await axios.post(
-        'http://localhost:5000/api/admin/email/campaign',
+        "https://future-fs-03-db4a.onrender.com/api/admin/email/campaign",
         emailForm,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       toast.success(`Email campaign sent to ${userCount} users!`);
-      setEmailForm({ subject: '', message: '', userFilter: 'all' });
+      setEmailForm({ subject: "", message: "", userFilter: "all" });
       setPreview(false);
     } catch (err) {
-      toast.error('Failed to send email campaign');
+      toast.error("Failed to send email campaign");
       console.error(err);
     } finally {
       setSending(false);
@@ -73,7 +73,9 @@ const EmailCampaign = () => {
               </label>
               <select
                 value={emailForm.userFilter}
-                onChange={(e) => setEmailForm({ ...emailForm, userFilter: e.target.value })}
+                onChange={(e) =>
+                  setEmailForm({ ...emailForm, userFilter: e.target.value })
+                }
                 className="w-full p-2 border rounded-lg"
               >
                 <option value="all">All Users ({userCount})</option>
@@ -89,7 +91,9 @@ const EmailCampaign = () => {
               <input
                 type="text"
                 value={emailForm.subject}
-                onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
+                onChange={(e) =>
+                  setEmailForm({ ...emailForm, subject: e.target.value })
+                }
                 className="w-full p-2 border rounded-lg"
                 placeholder="Enter email subject"
                 required
@@ -103,7 +107,9 @@ const EmailCampaign = () => {
               <textarea
                 rows={8}
                 value={emailForm.message}
-                onChange={(e) => setEmailForm({ ...emailForm, message: e.target.value })}
+                onChange={(e) =>
+                  setEmailForm({ ...emailForm, message: e.target.value })
+                }
                 className="w-full p-2 border rounded-lg"
                 placeholder="Write your message here..."
                 required
@@ -116,7 +122,7 @@ const EmailCampaign = () => {
                 onClick={() => setPreview(!preview)}
                 className="px-4 py-2 border border-amber-600 text-amber-600 rounded-lg hover:bg-amber-50 transition"
               >
-                {preview ? 'Hide Preview' : 'Preview'}
+                {preview ? "Hide Preview" : "Preview"}
               </button>
               <button
                 type="submit"
@@ -150,9 +156,11 @@ const EmailCampaign = () => {
                   <h3 className="font-bold">Yesekela Café</h3>
                 </div>
                 <div className="p-4">
-                  <h4 className="font-bold text-lg mb-2">{emailForm.subject || 'Subject'}</h4>
+                  <h4 className="font-bold text-lg mb-2">
+                    {emailForm.subject || "Subject"}
+                  </h4>
                   <div className="text-gray-700 whitespace-pre-wrap">
-                    {emailForm.message || 'Your message will appear here...'}
+                    {emailForm.message || "Your message will appear here..."}
                   </div>
                   <div className="mt-4 pt-3 border-t text-sm text-gray-500">
                     <p>Best regards,</p>
