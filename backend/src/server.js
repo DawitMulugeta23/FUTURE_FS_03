@@ -46,6 +46,7 @@ app.use(passport.session());
 const corsOptions = {
   origin: [
     "https://future-fs-03-wine-chi.vercel.app/",
+    "https://future-fs-03-wine-chi.vercel.app/register",
     "http://localhost:5173",
     "http://localhost:3000",
     "http://127.0.0.1:5173",
